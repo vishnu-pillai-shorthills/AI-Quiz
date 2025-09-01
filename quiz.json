@@ -1,0 +1,102 @@
+[
+    {
+      "question": "What speech recognition model did Mistral AI introduce?",
+      "options": {
+        "A": "Voxtral",
+        "B": "Kimi K2",
+        "C": "Hermes 3",
+        "D": "Goedel-Prover V2"
+      },
+      "answer": "A"
+    },
+    {
+      "question": "What is the token processing speed achieved by Kimi K2 on Groq?",
+      "options": {
+        "A": "60 TPS",
+        "B": "200 TPS",
+        "C": "65.4 TPS",
+        "D": "40 TPS"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "What is the primary feature of the Hermes 3 dataset announced by Teknium1?",
+      "options": {
+        "A": "1 million samples",
+        "B": "SOTA models for speech recognition",
+        "C": "Data for video generation",
+        "D": "Benchmark challenges"
+      },
+      "answer": "A"
+    },
+    {
+      "question": "Which new model architecture was highlighted by Google DeepMind?",
+      "options": {
+        "A": "Mixture-of-Experts",
+        "B": "Mixture-of-Recursions",
+        "C": "Diffusion-based models",
+        "D": "Transformer-like structures"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "Goedel-Prover V2 ranks #1 on which benchmarking challenge?",
+      "options": {
+        "A": "SWE-Bench",
+        "B": "PutnamBench",
+        "C": "MMLU",
+        "D": "GLUE"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "Which company shared a position paper calling for improved model reasoning interpretability?",
+      "options": {
+        "A": "Mistral AI",
+        "B": "OpenAI",
+        "C": "Moonshot AI",
+        "D": "DeepLearning AI"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "What technology did Walmart implement internally to build AI apps?",
+      "options": {
+        "A": "Element",
+        "B": "LlamaIndex",
+        "C": "Llama-3",
+        "D": "Goedel-Prover"
+      },
+      "answer": "A"
+    },
+    {
+      "question": "What is the maximum number of tokens the diffusion sampling step in llama.cpp supports?",
+      "options": {
+        "A": "1024 tokens",
+        "B": "2048 tokens",
+        "C": "4096 tokens",
+        "D": "512 tokens"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "What is the expected retail price of the AMD Radeon AI PRO R9700?",
+      "options": {
+        "A": "$800",
+        "B": "$1250",
+        "C": "$1500",
+        "D": "$2000"
+      },
+      "answer": "B"
+    },
+    {
+      "question": "What approach do the newly released Kontext LoRAs focus on?",
+      "options": {
+        "A": "Image recognition",
+        "B": "Generative tasks",
+        "C": "Natural language processing",
+        "D": "Data compression"
+      },
+      "answer": "B"
+    }
+  ]

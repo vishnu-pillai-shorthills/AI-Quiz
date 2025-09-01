@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Home - Quiz Application{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">🧠 Welcome to Quiz App</h1>
+        
+        {% if quiz %}
+            <div class="card">
+                <div class="card-header">
+                    <h3>Today's Quiz - {{ today }}</h3>
+                </div>
+                <div class="card-body">
+                    <p class="lead">Ready to test your knowledge?</p>
+                    <p>This quiz has {{ quiz.total_questions }} questions.</p>
+                    
+                    {% if can_attempt %}
+                        <a href="{{ url_for('quiz.take_quiz', quiz_date=today) }}" class="btn btn-success btn-lg">
+                            🚀 Start Quiz
+                        </a>
+                    {% else %}
+                        <div class="alert alert-info">
+                            {{ attempt_message }}
+                        </div>
+                        {% if user_attempt %}
+                            <a href="{{ url_for('quiz.view_result', quiz_date=today) }}" class="btn btn-primary">
+                                📊 View Results
+                            </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% else %}
+            <div class="card">
+                <div class="card-body">
+                    <h3>No Quiz Available</h3>
+                    <p class="lead">No quiz is available for {{ today }}.</p>
+                    <p>Please check back later or contact an administrator.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

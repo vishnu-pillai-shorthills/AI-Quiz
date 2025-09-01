@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Login - Quiz App{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-brain fa-3x text-primary mb-3"></i>
+                        <h2 class="h4 mb-2">Welcome to Quiz App</h2>
+                        <p class="text-muted">Sign in with your Microsoft account to continue</p>
+                    </div>
+                    
+                    {% if auth_url %}
+                    <div class="d-grid">
+                        <a href="{{ auth_url }}" class="btn btn-primary btn-lg">
+                            <i class="fab fa-microsoft me-2"></i>
+                            Sign in with Microsoft
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Authentication is not configured. Please contact your administrator.
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mt-4">
+                        <small class="text-muted">
+                            By signing in, you agree to our terms of service and privacy policy.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Additional Info -->
+            <div class="text-center mt-4">
+                <p class="text-muted small">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Secure authentication powered by Microsoft Azure AD
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-body text-center p-4">
+                <div class="spinner-border text-primary mb-3" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h6 class="mb-0">Signing you in...</h6>
+                <small class="text-muted">Please wait while we authenticate your account</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Show loading modal when login button is clicked
+document.addEventListener('DOMContentLoaded', function() {
+    const loginBtn = document.querySelector('a[href*="login.microsoftonline.com"]');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() {
+            const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+            loadingModal.show();
+        });
+    }
+});
+</script>
+{% endblock %} 

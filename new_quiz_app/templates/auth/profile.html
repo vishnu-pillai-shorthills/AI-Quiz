@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Quiz App{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2 text-primary"></i>
+                        User Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if current_user %}
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-user-circle fa-4x text-primary"></i>
+                            </div>
+                            <h5>{{ current_user.get('name', 'User') }}</h5>
+                            <p class="text-muted">{{ current_user.get('email', 'No email') }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="row">
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Name</label>
+                                    <p class="mb-0">{{ current_user.get('name', 'Not provided') }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Email</label>
+                                    <p class="mb-0">{{ current_user.get('email', 'Not provided') }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">User ID</label>
+                                    <p class="mb-0">{{ current_user.get('user_id', 'Not provided') }}</p>
+                                </div>
+                                <div class="col-sm-6 mb-3">
+                                    <label class="form-label text-muted">Last Active</label>
+                                    <p class="mb-0">{{ current_user.get('last_active', 'Not available') }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No user information available</h5>
+                        <p class="text-muted">Please sign in to view your profile.</p>
+                        <a href="{{ url_for('auth.login') }}" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i>Sign In
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

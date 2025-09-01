@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Result - {{ quiz_date }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body text-center p-5">
+                    <h2 class="mb-2">
+                        <i class="fas fa-trophy text-warning me-2"></i>
+                        Your Result
+                    </h2>
+                    <p class="text-muted">Date: {{ quiz_date }}</p>
+
+                    {% set score = (score_result.get('score') if score_result else None) or (result_data.get('score') if result_data else 0) %}
+                    {% set total = (score_result.get('total_questions') if score_result else None) or (result_data.get('total_questions') if result_data else 0) %}
+                    {% set percentage = (score_result.get('percentage') if score_result else None) or (result_data.get('percentage') if result_data else 0) %}
+
+                    <div class="display-4 fw-bold text-primary mb-3">{{ score }}/{{ total }}</div>
+                    <h5 class="text-muted mb-4">{{ '%.2f'|format(percentage) }}%</h5>
+
+                    <div class="d-flex justify-content-center gap-3">
+                        <a href="{{ url_for('quiz.view_result', quiz_date=quiz_date) }}" class="btn btn-outline-primary">
+                            <i class="fas fa-list me-1"></i> Review Answers
+                        </a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="fas fa-home me-1"></i> Go Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            {% if result_data and result_data.get('answers') and result_data.get('questions') %}
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white border-0">
+                    <h5 class="mb-0">
+                        <i class="fas fa-list-ul me-2 text-primary"></i>
+                        Quiz Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+                        {% for question in result_data['questions'] %}
+                        {% set question_idx = loop.index0 %}
+                        {% set user_answer = result_data['answer_lookup'].get(question_idx) %}
+                        
+                        <div class="card mb-4 border">
+                            <div class="card-header {% if user_answer and user_answer.get('is_correct') %}bg-success text-white{% elif user_answer %}bg-danger text-white{% else %}bg-warning text-dark{% endif %}">
+                                <h6 class="mb-0">
+                                    <span class="badge {% if user_answer and user_answer.get('is_correct') %}badge-light text-success{% elif user_answer %}badge-light text-danger{% else %}badge-light text-warning{% endif %} me-2">{{ loop.index }}</span>
+                                    Question {{ loop.index }}
+                                    {% if user_answer and user_answer.get('is_correct') %}
+                                        <i class="fas fa-check-circle float-end"></i>
+                                    {% elif user_answer %}
+                                        <i class="fas fa-times-circle float-end"></i>
+                                    {% else %}
+                                        <i class="fas fa-question-circle float-end"></i>
+                                    {% endif %}
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="question-text mb-3">
+                                    <strong>{{ question.question }}</strong>
+                                </div>
+                                
+                                <div class="options-container">
+                                    {% for key, value in question.options.items() %}
+                                    <div class="d-flex align-items-center mb-2">
+                                        <span class="me-3">{{ key }}.</span>
+                                        <span class="flex-grow-1 {% if key == question.answer %}text-success fw-bold{% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}text-danger fw-bold{% endif %}">
+                                            {{ value }}
+                                            {% if key == question.answer %}
+                                                <i class="fas fa-check text-success ms-2"></i>
+                                                <span class="badge bg-success ms-1">Correct Answer</span>
+                                            {% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}
+                                                <i class="fas fa-times text-danger ms-2"></i>
+                                                <span class="badge bg-danger ms-1">Your Answer</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if not user_answer %}
+                                <div class="alert alert-warning mt-3">
+                                    <i class="fas fa-exclamation-triangle me-2"></i>
+                                    No answer selected for this question
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

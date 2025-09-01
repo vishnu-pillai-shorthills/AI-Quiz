@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}No Quiz Available{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto text-center">
+        <h1 class="display-4 mb-4">📚 No Quiz Available</h1>
+        
+        <div class="card">
+            <div class="card-body">
+                <h3>No Quiz for {{ date }}</h3>
+                <p class="lead">There's no quiz available for today.</p>
+                <p>Please check back later or contact an administrator to upload a quiz.</p>
+                
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                    🔄 Refresh
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

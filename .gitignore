@@ -1,0 +1,15 @@
+.env
+.venv
+.env.backup
+*.log
+env*
+test*
+upload*
+verify*
+__pycache__
+.DS_Store
+.idea
+.vscode
+.pytest_cache
+flask_session
+quiz_app
