@@ -57,7 +57,6 @@ def callback():
         user_info = auth_service.handle_auth_callback(auth_code, state)
         
         if user_info:
-            flash(f"Welcome, {user_info.get('name', 'User')}!", "success")
             return redirect(url_for('main.index'))
         else:
             flash("Authentication completed but user creation failed", "warning")

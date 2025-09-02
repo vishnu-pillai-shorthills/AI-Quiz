@@ -12,7 +12,7 @@
         <div class="container">
             <a class="navbar-brand" href="{{ url_for('main.index') }}">🧠 Quiz App</a>
             <div class="navbar-nav ms-auto">
-                {% if current_user and current_user.is_authenticated %}
+                {% if current_user %}
                     <a class="nav-link" href="{{ url_for('main.index') }}">Home</a>
                     <a class="nav-link" href="{{ url_for('quiz.quiz_history') }}">History</a>
                     <a class="nav-link" href="{{ url_for('auth.profile') }}">Profile</a>

@@ -18,7 +18,6 @@ quiz_service = QuizService()
 def take_quiz(quiz_date=None):
     """Take quiz for a specific date or today"""
     if not auth_service.is_authenticated():
-        flash("Please sign in to take the quiz", "info")
         return redirect(url_for('auth.login'))
     
     # If no date specified, use today
@@ -108,8 +107,7 @@ def save_progress(quiz_date):
     try:
         data = request.get_json() or {}
         answers = data.get('answers', {})  # {question_index: "A"}
-        print(f"🔍 DEBUG save_progress: user_id={user_id}, quiz_date={quiz_date}")
-        print(f"🔍 DEBUG received answers: {answers}")
+
         
         if not isinstance(answers, dict):
             return jsonify({"success": False, "message": "Invalid answers payload"}), 400
@@ -117,6 +115,11 @@ def save_progress(quiz_date):
         if not answers:
             return jsonify({"success": True, "message": "No answers to save"})
         
+        # Check if quiz is already completed - don't allow saving after completion
+        attempt = quiz_service.get_user_attempt(user_id, quiz_date)
+        if attempt and attempt.is_completed:
+            return jsonify({"success": False, "message": "Quiz already completed - cannot save progress"})
+
         # Save each provided answer
         saved_count = 0
         for k, v in answers.items():
@@ -131,20 +134,16 @@ def save_progress(quiz_date):
             success, msg = quiz_service.save_answer(user_id, quiz_date, q_index, v)
             if success:
                 saved_count += 1
-            else:
-                print(f"⚠️ Failed to save answer {q_index}: {msg}")
-        
-        print(f"✅ Saved {saved_count} answers")
+
         return jsonify({"success": True, "message": f"Progress saved ({saved_count} answers)"})
     except Exception as e:
-        print(f"❌ Error in save_progress: {e}")
+
         return jsonify({"success": False, "message": f"Error saving progress: {str(e)}"}), 500
 
 @quiz_bp.route('/<quiz_date>/submit', methods=['POST'])
 def submit_quiz(quiz_date):
     """Submit completed quiz"""
     if not auth_service.is_authenticated():
-        flash("Please sign in to submit the quiz", "info")
         return redirect(url_for('auth.login'))
     
     user_id = auth_service.get_user_id()
@@ -156,7 +155,6 @@ def submit_quiz(quiz_date):
     success, message, score_result = quiz_service.submit_quiz(user_id, quiz_date)
     
     if success:
-        flash("Quiz submitted successfully!", "success")
         return render_template("quiz/result.html", 
                              quiz_date=quiz_date,
                              score_result=score_result)
@@ -194,15 +192,11 @@ def view_result(quiz_date):
     
     # Prepare result data
     answers_summary = attempt.get_answers_summary()
-    print(f"🔍 DEBUG view_result: Found {len(answers_summary)} answers")
-    for ans in answers_summary:
-        print(f"  Question {ans['question_index']}: {ans['selected_answer']} ({'correct' if ans.get('is_correct') else 'incorrect'})")
     
     # Create a lookup dict for faster answer matching
     answer_lookup = {}
     for ans in answers_summary:
         answer_lookup[ans['question_index']] = ans
-    print(f"🔍 DEBUG answer_lookup keys: {list(answer_lookup.keys())}")
     
     result_data = {
         'score': attempt.score,

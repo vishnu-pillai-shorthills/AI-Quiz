@@ -3,100 +3,550 @@
 {% block title %}Quiz Result - {{ quiz_date }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body text-center p-5">
-                    <h2 class="mb-2">
-                        <i class="fas fa-trophy text-warning me-2"></i>
-                        Your Result
-                    </h2>
-                    <p class="text-muted">Date: {{ quiz_date }}</p>
+{% set score = (score_result.get('score') if score_result else None) or (result_data.get('score') if result_data else 0) %}
+{% set total = (score_result.get('total_questions') if score_result else None) or (result_data.get('total_questions') if result_data else 0) %}
+{% set percentage = (score_result.get('percentage') if score_result else None) or (result_data.get('percentage') if result_data else 0) %}
 
-                    {% set score = (score_result.get('score') if score_result else None) or (result_data.get('score') if result_data else 0) %}
-                    {% set total = (score_result.get('total_questions') if score_result else None) or (result_data.get('total_questions') if result_data else 0) %}
-                    {% set percentage = (score_result.get('percentage') if score_result else None) or (result_data.get('percentage') if result_data else 0) %}
+<style>
+.results-wrapper {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+}
 
-                    <div class="display-4 fw-bold text-primary mb-3">{{ score }}/{{ total }}</div>
-                    <h5 class="text-muted mb-4">{{ '%.2f'|format(percentage) }}%</h5>
+.results-wrapper::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    z-index: -1;
+}
 
-                    <div class="d-flex justify-content-center gap-3">
-                        <a href="{{ url_for('quiz.view_result', quiz_date=quiz_date) }}" class="btn btn-outline-primary">
-                            <i class="fas fa-list me-1"></i> Review Answers
-                        </a>
-                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
-                            <i class="fas fa-home me-1"></i> Go Home
-                        </a>
-                    </div>
-                </div>
+.results-main {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+    max-width: 1200px;
+    margin: 0 auto;
+    overflow: hidden;
+}
+
+.results-header {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+    padding: 40px;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.results-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="white" opacity="0.1"/><circle cx="80" cy="30" r="1.5" fill="white" opacity="0.1"/><circle cx="40" cy="70" r="1" fill="white" opacity="0.1"/><circle cx="90" cy="80" r="2.5" fill="white" opacity="0.1"/></svg>');
+}
+
+.results-title {
+    font-size: 2.5rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+    position: relative;
+    z-index: 1;
+}
+
+.results-date {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    position: relative;
+    z-index: 1;
+}
+
+.score-section {
+    padding: 50px 40px;
+    text-align: center;
+    background: linear-gradient(45deg, #f8fafc, #f1f5f9);
+}
+
+.score-circle {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: conic-gradient(#3b82f6 0deg, #3b82f6 {% if total > 0 %}{{ '%.0f'|format((score/total)*360) }}{% else %}0{% endif %}deg, #e2e8f0 {% if total > 0 %}{{ '%.0f'|format((score/total)*360) }}{% else %}0{% endif %}deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 30px;
+    position: relative;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.score-circle::before {
+    content: '';
+    width: 160px;
+    height: 160px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    box-shadow: inset 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.score-content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.score-number {
+    font-size: 3rem;
+    font-weight: bold;
+    color: #1f2937;
+    line-height: 1;
+}
+
+.score-percentage {
+    font-size: 1.2rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.score-stats {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.stat-box {
+    background: white;
+    border-radius: 15px;
+    padding: 20px 30px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    text-align: center;
+    min-width: 120px;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1e293b;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-top: 5px;
+}
+
+.action-buttons {
+    margin-top: 40px;
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.btn-modern {
+    padding: 15px 30px;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border: none;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-review {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.btn-review:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+    color: white;
+}
+
+.btn-home {
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+}
+
+.btn-home:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(100, 116, 139, 0.3);
+    color: white;
+}
+
+.review-section {
+    padding: 40px;
+    background: #f8fafc;
+}
+
+.review-header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.review-title {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #1f2937;
+    margin-bottom: 10px;
+}
+
+.review-subtitle {
+    color: #6b7280;
+    font-size: 1.1rem;
+}
+
+.questions-grid {
+    max-height: 70vh;
+    overflow-y: auto;
+    padding-right: 10px;
+}
+
+.question-card {
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+    overflow: hidden;
+    transition: transform 0.2s ease;
+}
+
+.question-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+}
+
+.question-header {
+    padding: 20px 25px;
+    color: white;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.question-header.correct {
+    background: linear-gradient(135deg, #059669, #047857);
+}
+
+.question-header.incorrect {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.question-header.unanswered {
+    background: linear-gradient(135deg, #64748b, #475569);
+    color: white;
+}
+
+.question-badge {
+    background: rgba(255,255,255,0.2);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 25px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.question-header.unanswered .question-badge {
+    background: rgba(255,255,255,0.2);
+    color: white;
+}
+
+.question-body {
+    padding: 25px;
+}
+
+.question-text {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.option-item {
+    display: flex;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    transition: all 0.2s ease;
+}
+
+.option-item.correct-answer {
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border: 2px solid #10b981;
+}
+
+.option-item.user-wrong {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border: 2px solid #ef4444;
+}
+
+.option-item.neutral {
+    background: #f8f9fa;
+    border: 2px solid #e9ecef;
+}
+
+.option-letter {
+    width: 35px;
+    height: 35px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    margin-right: 15px;
+    color: white;
+}
+
+.option-item.correct-answer .option-letter {
+    background: #059669;
+}
+
+.option-item.user-wrong .option-letter {
+    background: #dc2626;
+}
+
+.option-item.neutral .option-letter {
+    background: #6b7280;
+}
+
+.option-text {
+    flex: 1;
+    font-size: 1rem;
+    font-weight: 500;
+}
+
+.option-badge {
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.badge-correct {
+    background: #059669;
+    color: white;
+}
+
+.badge-wrong {
+    background: #dc2626;
+    color: white;
+}
+
+.unanswered-alert {
+    background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+    border: 1px solid #64748b;
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+    color: #475569;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .results-wrapper {
+        padding: 10px;
+    }
+    
+    .results-header {
+        padding: 30px 20px;
+    }
+    
+    .results-title {
+        font-size: 2rem;
+    }
+    
+    .score-section {
+        padding: 30px 20px;
+    }
+    
+    .score-circle {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .score-circle::before {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .score-number {
+        font-size: 2.2rem;
+    }
+    
+    .score-stats {
+        flex-direction: column;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .review-section {
+        padding: 20px;
+    }
+    
+    .question-body {
+        padding: 20px;
+    }
+}
+</style>
+
+<div class="results-wrapper">
+    <div class="results-main">
+        <!-- Header -->
+        <div class="results-header">
+            <div class="results-title">
+                <i class="fas fa-trophy me-3"></i>
+                Quiz Complete!
             </div>
-
-            {% if result_data and result_data.get('answers') and result_data.get('questions') %}
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white border-0">
-                    <h5 class="mb-0">
-                        <i class="fas fa-list-ul me-2 text-primary"></i>
-                        Quiz Review
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
-                        {% for question in result_data['questions'] %}
-                        {% set question_idx = loop.index0 %}
-                        {% set user_answer = result_data['answer_lookup'].get(question_idx) %}
-                        
-                        <div class="card mb-4 border">
-                            <div class="card-header {% if user_answer and user_answer.get('is_correct') %}bg-success text-white{% elif user_answer %}bg-danger text-white{% else %}bg-warning text-dark{% endif %}">
-                                <h6 class="mb-0">
-                                    <span class="badge {% if user_answer and user_answer.get('is_correct') %}badge-light text-success{% elif user_answer %}badge-light text-danger{% else %}badge-light text-warning{% endif %} me-2">{{ loop.index }}</span>
-                                    Question {{ loop.index }}
-                                    {% if user_answer and user_answer.get('is_correct') %}
-                                        <i class="fas fa-check-circle float-end"></i>
-                                    {% elif user_answer %}
-                                        <i class="fas fa-times-circle float-end"></i>
-                                    {% else %}
-                                        <i class="fas fa-question-circle float-end"></i>
-                                    {% endif %}
-                                </h6>
-                            </div>
-                            <div class="card-body">
-                                <div class="question-text mb-3">
-                                    <strong>{{ question.question }}</strong>
-                                </div>
-                                
-                                <div class="options-container">
-                                    {% for key, value in question.options.items() %}
-                                    <div class="d-flex align-items-center mb-2">
-                                        <span class="me-3">{{ key }}.</span>
-                                        <span class="flex-grow-1 {% if key == question.answer %}text-success fw-bold{% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}text-danger fw-bold{% endif %}">
-                                            {{ value }}
-                                            {% if key == question.answer %}
-                                                <i class="fas fa-check text-success ms-2"></i>
-                                                <span class="badge bg-success ms-1">Correct Answer</span>
-                                            {% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}
-                                                <i class="fas fa-times text-danger ms-2"></i>
-                                                <span class="badge bg-danger ms-1">Your Answer</span>
-                                            {% endif %}
-                                        </span>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                                
-                                {% if not user_answer %}
-                                <div class="alert alert-warning mt-3">
-                                    <i class="fas fa-exclamation-triangle me-2"></i>
-                                    No answer selected for this question
-                                </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
-            </div>
-            {% endif %}
+            <div class="results-date">{{ quiz_date }}</div>
         </div>
+
+        <!-- Score Section -->
+        <div class="score-section">
+            <div class="score-circle">
+                <div class="score-content">
+                    <div class="score-number">{{ score }}/{{ total }}</div>
+                    <div class="score-percentage">{{ '%.0f'|format(percentage) }}%</div>
+                </div>
+            </div>
+
+            <div class="score-stats">
+                <div class="stat-box">
+                    <div class="stat-number">{{ score }}</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ total - score }}</div>
+                    <div class="stat-label">Incorrect</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{{ total }}</div>
+                    <div class="stat-label">Total</div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <a href="#review" class="btn-modern btn-review">
+                    <i class="fas fa-list-alt"></i>
+                    Review Answers
+                </a>
+                <a href="{{ url_for('main.index') }}" class="btn-modern btn-home">
+                    <i class="fas fa-home"></i>
+                    Go Home
+                </a>
+            </div>
+        </div>
+
+        <!-- Review Section -->
+        {% if result_data and result_data.get('answers') and result_data.get('questions') %}
+        <div class="review-section" id="review">
+            <div class="review-header">
+                <div class="review-title">
+                    <i class="fas fa-search me-2"></i>
+                    Answer Review
+                </div>
+                <div class="review-subtitle">See how you performed on each question</div>
+            </div>
+
+            <div class="questions-grid">
+                {% for question in result_data['questions'] %}
+                {% set question_idx = loop.index0 %}
+                {% set user_answer = result_data['answer_lookup'].get(question_idx) %}
+                
+                <div class="question-card">
+                    <div class="question-header {% if user_answer and user_answer.get('is_correct') %}correct{% elif user_answer %}incorrect{% else %}unanswered{% endif %}">
+                        <span>
+                            <i class="fas {% if user_answer and user_answer.get('is_correct') %}fa-check-circle{% elif user_answer %}fa-times-circle{% else %}fa-question-circle{% endif %} me-2"></i>
+                            Question {{ loop.index }}
+                        </span>
+                        <span class="question-badge">
+                            {% if user_answer and user_answer.get('is_correct') %}
+                                Correct
+                            {% elif user_answer %}
+                                Incorrect
+                            {% else %}
+                                Not Answered
+                            {% endif %}
+                        </span>
+                    </div>
+                    
+                    <div class="question-body">
+                        <div class="question-text">{{ question.question }}</div>
+                        
+                        <div class="options-container">
+                            {% for key, value in question.options.items() %}
+                            <div class="option-item {% if key == question.answer %}correct-answer{% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}user-wrong{% else %}neutral{% endif %}">
+                                <div class="option-letter">{{ key }}</div>
+                                <div class="option-text">{{ value }}</div>
+                                <div>
+                                    {% if key == question.answer %}
+                                        <span class="option-badge badge-correct">
+                                            <i class="fas fa-check me-1"></i>Correct
+                                        </span>
+                                    {% elif user_answer and user_answer.get('selected_answer') == key and key != question.answer %}
+                                        <span class="option-badge badge-wrong">
+                                            <i class="fas fa-times me-1"></i>Your Choice
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        
+                        {% if not user_answer %}
+                        <div class="unanswered-alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            You didn't answer this question
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
+
+<script>
+// Smooth scroll to review section
+document.addEventListener('DOMContentLoaded', function() {
+    const reviewBtn = document.querySelector('a[href="#review"]');
+    if (reviewBtn) {
+        reviewBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const reviewSection = document.getElementById('review');
+            if (reviewSection) {
+                reviewSection.scrollIntoView({
+                    behavior: 'smooth'
+                });
+            }
+        });
+    }
+});
+</script>
 {% endblock %} 
