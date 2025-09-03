@@ -155,9 +155,38 @@ def submit_quiz(quiz_date):
     success, message, score_result = quiz_service.submit_quiz(user_id, quiz_date)
     
     if success:
-        return render_template("quiz/result.html", 
-                             quiz_date=quiz_date,
-                             score_result=score_result)
+        # Get detailed result data for review section
+        attempt = quiz_service.get_user_attempt(user_id, quiz_date)
+        quiz = quiz_service.get_quiz_by_date(quiz_date)
+        
+        if attempt and quiz:
+            # Prepare full result data including answers summary
+            answers_summary = attempt.get_answers_summary()
+            
+            # Create a lookup dict for faster answer matching
+            answer_lookup = {}
+            for ans in answers_summary:
+                answer_lookup[ans['question_index']] = ans
+            
+            result_data = {
+                'score': attempt.score,
+                'total_questions': attempt.total_questions,
+                'percentage': attempt.percentage,
+                'completed_at': attempt.completed_at,
+                'answers': answers_summary,
+                'answer_lookup': answer_lookup,
+                'questions': quiz.questions
+            }
+            
+            return render_template("quiz/result.html", 
+                                 quiz_date=quiz_date,
+                                 score_result=score_result,
+                                 result_data=result_data)
+        else:
+            # Fallback to basic result
+            return render_template("quiz/result.html", 
+                                 quiz_date=quiz_date,
+                                 score_result=score_result)
     else:
         flash(message, "error")
         return redirect(url_for('quiz.take_quiz', quiz_date=quiz_date))

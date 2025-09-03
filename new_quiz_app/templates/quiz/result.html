@@ -242,15 +242,7 @@
     justify-content: space-between;
 }
 
-.question-header.correct {
-    background: linear-gradient(135deg, #059669, #047857);
-}
-
-.question-header.incorrect {
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-}
-
-.question-header.unanswered {
+.question-header.neutral {
     background: linear-gradient(135deg, #64748b, #475569);
     color: white;
 }
@@ -262,11 +254,6 @@
     border-radius: 25px;
     font-weight: bold;
     font-size: 0.9rem;
-}
-
-.question-header.unanswered .question-badge {
-    background: rgba(255,255,255,0.2);
-    color: white;
 }
 
 .question-body {
@@ -450,10 +437,12 @@
             </div>
 
             <div class="action-buttons">
+                {% if result_data and result_data.get('answers') and result_data.get('questions') %}
                 <a href="#review" class="btn-modern btn-review">
                     <i class="fas fa-list-alt"></i>
                     Review Answers
                 </a>
+                {% endif %}
                 <a href="{{ url_for('main.index') }}" class="btn-modern btn-home">
                     <i class="fas fa-home"></i>
                     Go Home
@@ -478,9 +467,9 @@
                 {% set user_answer = result_data['answer_lookup'].get(question_idx) %}
                 
                 <div class="question-card">
-                    <div class="question-header {% if user_answer and user_answer.get('is_correct') %}correct{% elif user_answer %}incorrect{% else %}unanswered{% endif %}">
+                    <div class="question-header neutral">
                         <span>
-                            <i class="fas {% if user_answer and user_answer.get('is_correct') %}fa-check-circle{% elif user_answer %}fa-times-circle{% else %}fa-question-circle{% endif %} me-2"></i>
+                            <i class="fas fa-question-circle me-2"></i>
                             Question {{ loop.index }}
                         </span>
                         <span class="question-badge">
@@ -542,6 +531,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const reviewSection = document.getElementById('review');
             if (reviewSection) {
                 reviewSection.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            } else {
+                console.warn('Review section not found - this should not happen if button is conditional');
+                // Fallback: scroll to bottom of page
+                window.scrollTo({
+                    top: document.body.scrollHeight,
                     behavior: 'smooth'
                 });
             }
