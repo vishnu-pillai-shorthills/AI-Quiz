@@ -19,34 +19,36 @@ def index():
     if not auth_service.is_authenticated():
         return redirect(url_for('auth.login'))
     
-    # Get today's quiz
-    today = quiz_service.get_today_string()
-    quiz = quiz_service.get_todays_quiz()
-    
-    if not quiz:
-        return render_template("main/no_quiz.html", date=today)
-    
     # Get user info
     user_info = auth_service.get_current_user_info()
-    
-    # Check if user has attempted today's quiz
     user_id = auth_service.get_user_id()
-    user_attempt = None
-    can_attempt = True
-    attempt_message = ""
     
-    if user_id:
-        can_attempt, attempt_message = quiz_service.can_user_attempt_quiz(user_id, today)
-        if not can_attempt:
-            user_attempt = quiz_service.get_user_attempt(user_id, today)
+    # Get recent quizzes (past 7 days)
+    recent_quizzes = quiz_service.get_recent_quizzes(7)
+    
+    # Add status information for each quiz
+    quiz_data = []
+    for quiz_info in recent_quizzes:
+        quiz_date = quiz_info['quiz_date']
+        status = quiz_service.get_user_quiz_status(user_id, quiz_date) if user_id else {
+            'status': 'not_attempted',
+            'message': 'Please log in to attempt',
+            'action': 'login',
+            'button_text': 'Login Required',
+            'button_class': 'btn-secondary'
+        }
+        
+        quiz_data.append({
+            'quiz': quiz_info['quiz'],
+            'quiz_date': quiz_date,
+            'total_questions': quiz_info['total_questions'],
+            'status': status
+        })
     
     return render_template("main/index.html", 
-                         quiz=quiz,
-                         today=today,
+                         quiz_data=quiz_data,
                          user=user_info,
-                         can_attempt=can_attempt,
-                         attempt_message=attempt_message,
-                         user_attempt=user_attempt)
+                         today=quiz_service.get_today_string())
 
 @main_bp.route('/admin')
 def admin_dashboard():

@@ -3,42 +3,274 @@
 {% block title %}Home - Quiz Application{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8 mx-auto text-center">
-        <h1 class="display-4 mb-4">🧠 Welcome to Quiz App</h1>
-        
-        {% if quiz %}
-            <div class="card">
-                <div class="card-header">
-                    <h3>Today's Quiz - {{ today }}</h3>
-                </div>
-                <div class="card-body">
-                    <p class="lead">Ready to test your knowledge?</p>
-                    <p>This quiz has {{ quiz.total_questions }} questions.</p>
-                    
-                    {% if can_attempt %}
-                        <a href="{{ url_for('quiz.take_quiz', quiz_date=today) }}" class="btn btn-success btn-lg">
-                            🚀 Start Quiz
-                        </a>
-                    {% else %}
-                        <div class="alert alert-info">
-                            {{ attempt_message }}
+<style>
+.quiz-homepage {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    min-height: 100vh;
+    padding: 20px;
+    position: relative;
+}
+
+.quiz-homepage::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+        linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    z-index: -1;
+}
+
+.page-header {
+    text-align: center;
+    color: white;
+    margin-bottom: 40px;
+}
+
+.page-title {
+    font-size: 3rem;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.page-subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+}
+
+.quizzes-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.quiz-card {
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 25px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.quiz-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+.quiz-header {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 20px 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quiz-date {
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.quiz-meta {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+.quiz-body {
+    padding: 25px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.quiz-info {
+    flex: 1;
+}
+
+.quiz-questions {
+    font-size: 1.1rem;
+    color: #374151;
+    margin-bottom: 10px;
+}
+
+.quiz-status {
+    font-size: 0.95rem;
+    color: #6b7280;
+}
+
+.quiz-actions {
+    flex-shrink: 0;
+    margin-left: 20px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+.badge-not-attempted {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.badge-in-progress {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.badge-completed {
+    background: #dcfce7;
+    color: #059669;
+}
+
+.quiz-btn {
+    padding: 12px 24px;
+    border-radius: 25px;
+    font-weight: 600;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quiz-btn:hover {
+    transform: translateY(-1px);
+    text-decoration: none;
+}
+
+.no-quizzes {
+    background: white;
+    border-radius: 15px;
+    padding: 60px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.no-quizzes h3 {
+    color: #374151;
+    margin-bottom: 15px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .quiz-homepage {
+        padding: 10px;
+    }
+    
+    .page-title {
+        font-size: 2.2rem;
+    }
+    
+    .quiz-body {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .quiz-actions {
+        margin-left: 0;
+        margin-top: 20px;
+    }
+    
+    .quiz-header {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+
+<div class="quiz-homepage">
+    <div class="page-header">
+        <div class="page-title">
+            🧠 AI Quiz Platform
+        </div>
+        <div class="page-subtitle">
+            Welcome back! Here are your recent quizzes from the past 7 days.
+        </div>
+    </div>
+
+    <div class="quizzes-container">
+        {% if quiz_data %}
+            {% for item in quiz_data %}
+            <div class="quiz-card">
+                <div class="quiz-header">
+                    <div>
+                        <div class="quiz-date">
+                            Quiz - {{ item.quiz_date }}
+                            {% if item.quiz_date == today %}
+                                <span class="badge bg-light text-primary ms-2">Today</span>
+                            {% endif %}
                         </div>
-                        {% if user_attempt %}
-                            <a href="{{ url_for('quiz.view_result', quiz_date=today) }}" class="btn btn-primary">
-                                📊 View Results
+                    </div>
+                    <div class="quiz-meta">
+                        {{ item.total_questions }} Questions
+                    </div>
+                </div>
+                
+                <div class="quiz-body">
+                    <div class="quiz-info">
+                        <div class="quiz-questions">
+                            <i class="fas fa-brain me-2"></i>
+                            {{ item.total_questions }} AI Knowledge Questions
+                        </div>
+                        
+                        <div>
+                            <span class="status-badge badge-{{ item.status.status|replace('_', '-') }}">
+                                {% if item.status.status == 'not_attempted' %}
+                                    <i class="fas fa-play me-1"></i>Not Started
+                                {% elif item.status.status == 'in_progress' %}
+                                    <i class="fas fa-pause me-1"></i>In Progress
+                                {% elif item.status.status == 'completed' %}
+                                    <i class="fas fa-check me-1"></i>Completed
+                                {% endif %}
+                            </span>
+                        </div>
+                        
+                        <div class="quiz-status">
+                            {{ item.status.message }}
+                        </div>
+                    </div>
+                    
+                    <div class="quiz-actions">
+                        {% if item.status.action == 'attempt' %}
+                            <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
+                               class="quiz-btn {{ item.status.button_class }}">
+                                {{ item.status.button_text }}
+                            </a>
+                        {% elif item.status.action == 'resume' %}
+                            <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
+                               class="quiz-btn {{ item.status.button_class }}">
+                                {{ item.status.button_text }}
+                            </a>
+                        {% elif item.status.action == 'view_results' %}
+                            <a href="{{ url_for('quiz.view_result', quiz_date=item.quiz_date) }}" 
+                               class="quiz-btn {{ item.status.button_class }}">
+                                {{ item.status.button_text }}
                             </a>
                         {% endif %}
-                    {% endif %}
+                    </div>
                 </div>
             </div>
+            {% endfor %}
         {% else %}
-            <div class="card">
-                <div class="card-body">
-                    <h3>No Quiz Available</h3>
-                    <p class="lead">No quiz is available for {{ today }}.</p>
-                    <p>Please check back later or contact an administrator.</p>
-                </div>
+            <div class="no-quizzes">
+                <h3>
+                    <i class="fas fa-calendar-times me-2"></i>
+                    No Quizzes Available
+                </h3>
+                <p class="lead">No quizzes have been created for the past 7 days.</p>
+                <p>Please check back later or contact an administrator to add new quizzes.</p>
             </div>
         {% endif %}
     </div>

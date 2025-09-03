@@ -1,7 +1,7 @@
 """
 Quiz service for managing quizzes and user attempts
 """
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import List, Dict, Optional, Tuple
 from models.quiz import Quiz
 from models.quiz_attempt import QuizAttempt
@@ -37,6 +37,73 @@ class QuizService:
     def get_todays_quiz(self) -> Optional[Quiz]:
         """Get today's quiz"""
         return self.get_quiz_by_date(self.get_today_string())
+    
+    def get_recent_quizzes(self, days: int = 7) -> List[Dict]:
+        """Get quizzes from the past N days with attempt status for user"""
+        if not db.is_connected():
+            print("⚠️  Database not connected, returning empty list")
+            return []
+        
+        try:
+            # Calculate date range
+            today = date.today()
+            start_date = today - timedelta(days=days-1)  # Include today
+            
+            # Generate list of dates
+            date_list = []
+            for i in range(days):
+                check_date = start_date + timedelta(days=i)
+                date_list.append(check_date.strftime('%Y-%m-%d'))
+            
+            # Get quizzes for these dates
+            quizzes = list(db.quizzes_collection.find({
+                "quiz_date": {"$in": date_list}
+            }).sort("quiz_date", -1))  # Most recent first
+            
+            # Convert to Quiz objects
+            quiz_list = []
+            for quiz_doc in quizzes:
+                quiz = Quiz.from_dict(quiz_doc)
+                quiz_list.append({
+                    'quiz': quiz,
+                    'quiz_date': quiz.quiz_date,
+                    'total_questions': quiz.total_questions
+                })
+            
+            return quiz_list
+            
+        except Exception as e:
+            print(f"Error getting recent quizzes: {e}")
+            return []
+    
+    def get_user_quiz_status(self, user_id: str, quiz_date: str) -> Dict:
+        """Get user's status for a specific quiz"""
+        attempt = self.get_user_attempt(user_id, quiz_date)
+        
+        if not attempt:
+            return {
+                'status': 'not_attempted',
+                'message': 'Ready to start',
+                'action': 'attempt',
+                'button_text': '🚀 Start Quiz',
+                'button_class': 'btn-success'
+            }
+        elif attempt.is_completed:
+            return {
+                'status': 'completed',
+                'message': f'Completed with {attempt.score}/{attempt.total_questions} ({attempt.percentage:.0f}%)',
+                'action': 'view_results',
+                'button_text': '📊 View Results',
+                'button_class': 'btn-primary'
+            }
+        else:
+            return {
+                'status': 'in_progress',
+                'message': f'In progress ({len(attempt.answers)} questions answered)',
+                'action': 'resume',
+                'button_text': '▶️ Resume Quiz',
+                'button_class': 'btn-warning'
+            }
     
     def create_quiz(self, quiz_data: Dict) -> Tuple[bool, str, Optional[Quiz]]:
         """Create a new quiz"""
