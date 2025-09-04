@@ -1,0 +1,42 @@
+nohup: ignoring input
+✅ MongoDB connection successful!
+✅ Database indexes created successfully!
+ * Serving Flask app 'app'
+ * Debug mode: on
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:8002
+ * Running on http://10.99.22.158:8002
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 575-649-327
+127.0.0.1 - - [04/Sep/2025 14:25:22] "GET /health HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:25:32] "GET /api/analytics/7-days HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:25:42] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:25:42] "GET /static/js/app.js HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:25:43] "GET /static/css/style.css HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:28] "GET /quiz/2025-09-01 HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:28] "GET /static/css/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [04/Sep/2025 14:28:28] "GET /static/js/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [04/Sep/2025 14:28:30] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:33] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:36] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:39] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:41] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:45] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:47] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:28:48] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:29:00] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:29:29] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:00] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:30] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:48] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:48] "POST /quiz/2025-09-01/submit HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:48] "GET /static/css/style.css HTTP/1.1" 304 -
+127.0.0.1 - - [04/Sep/2025 14:30:49] "POST /quiz/2025-09-01/save-progress HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:30:49] "GET /static/js/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [04/Sep/2025 14:39:39] "GET /quiz/2025-08-27 HTTP/1.1" 302 -
+127.0.0.1 - - [04/Sep/2025 14:39:40] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [04/Sep/2025 14:39:40] "GET /static/js/app.js HTTP/1.1" 304 -
+127.0.0.1 - - [04/Sep/2025 14:39:40] "GET /static/css/style.css HTTP/1.1" 304 -

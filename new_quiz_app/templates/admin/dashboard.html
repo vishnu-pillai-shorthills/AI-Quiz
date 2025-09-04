@@ -12,6 +12,9 @@
                     Admin Dashboard
                 </h1>
                 <div class="d-flex gap-2">
+                    <a href="{{ url_for('main.admin_analytics') }}" class="btn btn-outline-info">
+                        <i class="fas fa-chart-bar me-1"></i> Analytics
+                    </a>
                     <a href="{{ url_for('main.admin_quizzes') }}" class="btn btn-outline-primary">
                         <i class="fas fa-list me-1"></i> Manage Quizzes
                     </a>
@@ -204,7 +207,7 @@
                             </a>
                         </div>
                         <div class="col-md-3 mb-3">
-                            <a href="#" class="text-decoration-none">
+                            <a href="{{ url_for('main.admin_analytics') }}" class="text-decoration-none">
                                 <div class="card border-0 bg-light h-100">
                                     <div class="card-body text-center">
                                         <i class="fas fa-chart-bar fa-2x text-info mb-3"></i>

@@ -9,7 +9,7 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
 if __name__ == '__main__':
     # Get port from environment or use default
-    port = int(os.environ.get('PORT', 8003))
+    port = int(os.environ.get('PORT', 8002))
     
     # Run the application
     app.run(

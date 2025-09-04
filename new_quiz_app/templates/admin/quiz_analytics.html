@@ -1,0 +1,334 @@
+{% extends "base.html" %}
+
+{% block title %}Quiz Analytics - {{ quiz_date }} - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Quiz Analytics - {{ quiz_date }}</h2>
+        <div>
+            <a href="{{ url_for('main.admin_analytics') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Analytics
+            </a>
+            <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-outline-primary">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if quiz_analytics.error %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ quiz_analytics.error }}
+        </div>
+    {% elif quiz_analytics.success %}
+        <!-- Quiz Overview Cards -->
+        <div class="row mb-4">
+            <div class="col-md-2">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-calendar-day fa-2x mb-2"></i>
+                        <h6>Quiz Date</h6>
+                        <h5>{{ quiz_analytics.quiz_date }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-question-circle fa-2x mb-2"></i>
+                        <h6>Questions</h6>
+                        <h5>{{ quiz_analytics.total_questions }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <h6>Participants</h6>
+                        <h5>{{ quiz_analytics.participants_count }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <h6>Avg Score</h6>
+                        <h5>{{ quiz_analytics.average_score }}</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-secondary text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-percentage fa-2x mb-2"></i>
+                        <h6>Avg %</h6>
+                        <h5>{{ "%.1f"|format(quiz_analytics.average_percentage) }}%</h5>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="card bg-dark text-white h-100">
+                    <div class="card-body text-center">
+                        <i class="fas fa-trophy fa-2x mb-2"></i>
+                        <h6>Best Score</h6>
+                        <h5>{{ quiz_analytics.highest_score }}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Distribution Chart -->
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-chart-pie me-2"></i>
+                            Score Distribution
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <canvas id="scoreDistributionChart" width="400" height="200"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list-ol me-2"></i>
+                            Score Breakdown
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Grade Range</th>
+                                        <th>Count</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for grade, count in quiz_analytics.score_distribution.items() %}
+                                    <tr>
+                                        <td>
+                                            <span class="badge {% if '90' in grade %}bg-success{% elif '80' in grade %}bg-primary{% elif '70' in grade %}bg-warning{% elif '60' in grade %}bg-info{% else %}bg-danger{% endif %}">
+                                                {{ grade }}
+                                            </span>
+                                        </td>
+                                        <td><strong>{{ count }}</strong></td>
+                                        <td>
+                                            {% if quiz_analytics.participants_count > 0 %}
+                                                {{ "%.1f"|format((count / quiz_analytics.participants_count) * 100) }}%
+                                            {% else %}
+                                                0%
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- All Participants Table -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    <i class="fas fa-users me-2"></i>
+                    All Participants ({{ quiz_analytics.participants_count }})
+                </h5>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="exportToCSV()">
+                        <i class="fas fa-download"></i> Export CSV
+                    </button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover" id="participantsTable">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Rank</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Grade</th>
+                                <th>Completed At</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for participant in quiz_analytics.all_participants %}
+                            <tr>
+                                <td>
+                                    {% if participant.rank <= 3 %}
+                                        {% if participant.rank == 1 %}
+                                            <i class="fas fa-crown text-warning me-1"></i>
+                                        {% elif participant.rank == 2 %}
+                                            <i class="fas fa-medal text-secondary me-1"></i>
+                                        {% else %}
+                                            <i class="fas fa-award text-success me-1"></i>
+                                        {% endif %}
+                                    {% endif %}
+                                    <strong>{{ participant.rank }}</strong>
+                                </td>
+                                <td>
+                                    <div class="fw-bold">{{ participant.name }}</div>
+                                </td>
+                                <td>
+                                    <small class="text-muted">{{ participant.email }}</small>
+                                </td>
+                                <td>
+                                    <strong>{{ participant.score }}</strong>
+                                    <small class="text-muted">/ {{ participant.total_questions }}</small>
+                                </td>
+                                <td>
+                                    <span class="{% if participant.percentage >= 90 %}text-success{% elif participant.percentage >= 80 %}text-primary{% elif participant.percentage >= 70 %}text-warning{% elif participant.percentage >= 60 %}text-info{% else %}text-danger{% endif %}">
+                                        <strong>{{ "%.1f"|format(participant.percentage) }}%</strong>
+                                    </span>
+                                </td>
+                                <td>
+                                    {% if participant.percentage >= 90 %}
+                                        <span class="badge bg-success">A</span>
+                                    {% elif participant.percentage >= 80 %}
+                                        <span class="badge bg-primary">B</span>
+                                    {% elif participant.percentage >= 70 %}
+                                        <span class="badge bg-warning">C</span>
+                                    {% elif participant.percentage >= 60 %}
+                                        <span class="badge bg-info">D</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">F</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <small class="text-muted">
+                                        {% if participant.completed_at != 'Unknown' %}
+                                            {% if participant.completed_at is string %}
+                                                {{ participant.completed_at }}
+                                            {% else %}
+                                                {{ participant.completed_at.strftime('%H:%M:%S') if participant.completed_at and hasattr(participant.completed_at, 'strftime') else participant.completed_at }}
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    {% elif quiz_analytics.message %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            {{ quiz_analytics.message }}
+            <br>
+            <strong>Quiz Date:</strong> {{ quiz_analytics.quiz_date }}<br>
+            <strong>Total Questions:</strong> {{ quiz_analytics.total_questions }}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i>
+            No analytics data available for this quiz date.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if quiz_analytics.success %}
+    // Score Distribution Chart
+    const ctx = document.getElementById('scoreDistributionChart').getContext('2d');
+    const scoreDistribution = {{ quiz_analytics.score_distribution | tojson }};
+    
+    const chart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: Object.keys(scoreDistribution),
+            datasets: [{
+                data: Object.values(scoreDistribution),
+                backgroundColor: [
+                    '#28a745', // 90-100% - Green
+                    '#007bff', // 80-89% - Blue
+                    '#ffc107', // 70-79% - Yellow
+                    '#17a2b8', // 60-69% - Cyan
+                    '#dc3545'  // Below 60% - Red
+                ],
+                borderWidth: 2,
+                borderColor: '#fff'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((context.parsed / total) * 100).toFixed(1);
+                            return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+    {% endif %}
+});
+
+function exportToCSV() {
+    const table = document.getElementById('participantsTable');
+    const rows = table.querySelectorAll('tr');
+    const csvContent = [];
+    
+    // Get headers
+    const headers = [];
+    rows[0].querySelectorAll('th').forEach(th => {
+        headers.push(th.textContent.trim());
+    });
+    csvContent.push(headers.join(','));
+    
+    // Get data rows
+    for (let i = 1; i < rows.length; i++) {
+        const row = [];
+        rows[i].querySelectorAll('td').forEach(td => {
+            // Clean up the text content
+            let text = td.textContent.trim().replace(/,/g, ';');
+            row.push('"' + text + '"');
+        });
+        csvContent.push(row.join(','));
+    }
+    
+    // Download CSV
+    const csvString = csvContent.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'quiz_analytics_{{ quiz_date }}.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+</script>
+{% endblock %} 

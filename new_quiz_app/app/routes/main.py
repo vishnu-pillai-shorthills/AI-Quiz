@@ -4,6 +4,7 @@ Main application routes
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from services.auth_service import AuthService
 from services.quiz_service import QuizService
+from services.analytics_service import AnalyticsService
 from datetime import date
 
 # Create blueprint
@@ -12,6 +13,7 @@ main_bp = Blueprint('main', __name__)
 # Initialize services
 auth_service = AuthService()
 quiz_service = QuizService()
+analytics_service = AnalyticsService()
 
 @main_bp.route('/')
 def index():
@@ -62,9 +64,11 @@ def admin_dashboard():
     
     # Get recent quizzes
     recent_quizzes = []
-    if hasattr(quiz_service, 'db') and quiz_service.db and quiz_service.db.is_connected():
+    from config.database import db
+    if db.is_connected():
         try:
-            recent_quizzes = list(quiz_service.db.quizzes_collection.find(
+            recent_quizzes = list(db.quizzes_collection.find(
+                {},
                 sort=[("created_at", -1)],
                 limit=10
             ))
@@ -86,9 +90,11 @@ def admin_quizzes():
     
     # Get all quizzes
     quizzes = []
-    if hasattr(quiz_service, 'db') and quiz_service.db and quiz_service.db.is_connected():
+    from config.database import db
+    if db.is_connected():
         try:
-            quizzes = list(quiz_service.db.quizzes_collection.find(
+            quizzes = list(db.quizzes_collection.find(
+                {},
                 sort=[("quiz_date", -1)]
             ))
         except Exception as e:
@@ -133,6 +139,85 @@ def admin_upload_quiz():
             flash(f"Error processing quiz file: {str(e)}", "error")
     
     return render_template("admin/upload_quiz.html")
+
+@main_bp.route('/admin/analytics')
+@main_bp.route('/admin/analytics/')
+def admin_analytics():
+    """Admin analytics dashboard"""
+    if not auth_service.is_authenticated():
+        flash("Please sign in to access admin panel", "info")
+        return redirect(url_for('auth.login'))
+    
+    # Get 7-day analytics
+    analytics_data = analytics_service.get_last_7_days_stats()
+    
+    if "error" in analytics_data:
+        flash(f"Error loading analytics: {analytics_data['error']}", "error")
+        analytics_data = {"error": analytics_data["error"]}
+    
+    return render_template("admin/analytics.html", analytics=analytics_data)
+
+@main_bp.route('/admin/analytics/quiz/<quiz_date>')
+def admin_quiz_analytics(quiz_date):
+    """Detailed analytics for a specific quiz"""
+    if not auth_service.is_authenticated():
+        flash("Please sign in to access admin panel", "info")
+        return redirect(url_for('auth.login'))
+    
+    # Get detailed quiz analytics
+    quiz_analytics = analytics_service.get_quiz_analytics(quiz_date)
+    
+    if "error" in quiz_analytics:
+        flash(f"Error loading quiz analytics: {quiz_analytics['error']}", "error")
+    
+    return render_template("admin/quiz_analytics.html", 
+                         quiz_analytics=quiz_analytics,
+                         quiz_date=quiz_date)
+
+@main_bp.route('/api/analytics/7-days', methods=['GET'])
+def api_analytics_7_days():
+    """API endpoint for 7-day analytics (no authentication required for testing)"""
+    try:
+        analytics_data = analytics_service.get_last_7_days_stats()
+        return jsonify(analytics_data)
+    except Exception as e:
+        return jsonify({"error": f"Error getting analytics: {str(e)}"}), 500
+
+@main_bp.route('/api/analytics/quiz/<quiz_date>', methods=['GET'])
+def api_analytics_quiz(quiz_date):
+    """API endpoint for specific quiz analytics (no authentication required for testing)"""
+    try:
+        quiz_analytics = analytics_service.get_quiz_analytics(quiz_date)
+        return jsonify(quiz_analytics)
+    except Exception as e:
+        return jsonify({"error": f"Error getting quiz analytics: {str(e)}"}), 500
+
+@main_bp.route('/api/debug/session', methods=['GET'])
+def debug_session():
+    """Debug endpoint to check session data (for troubleshooting authentication)"""
+    from flask import session
+    return jsonify({
+        "session_keys": list(session.keys()),
+        "has_user_key": "user" in session,
+        "user_value": session.get("user"),
+        "is_authenticated": auth_service.is_authenticated(),
+        "session_id": session.get("_id", "No session ID"),
+        "all_session_data": dict(session) if session else {}
+    })
+
+@main_bp.route('/api/admin/analytics', methods=['GET'])
+def api_admin_analytics():
+    """API endpoint for admin analytics (no authentication required for testing)"""
+    try:
+        # Get 7-day analytics
+        analytics_data = analytics_service.get_last_7_days_stats()
+        
+        if "error" in analytics_data:
+            return jsonify({"error": analytics_data["error"]}), 500
+        
+        return jsonify(analytics_data)
+    except Exception as e:
+        return jsonify({"error": f"Error loading analytics: {str(e)}"}), 500
 
 @main_bp.route('/api/upload-quiz-test', methods=['POST'])
 def api_upload_quiz_test():

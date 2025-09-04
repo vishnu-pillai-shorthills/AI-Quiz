@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics Dashboard - Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>📊 Analytics Dashboard</h2>
+        <div>
+            <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn-outline-secondary me-2">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+            <a href="{{ url_for('main.admin_quizzes') }}" class="btn btn-outline-primary">
+                <i class="fas fa-list"></i> Manage Quizzes
+            </a>
+        </div>
+    </div>
+
+    {% if analytics.error %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            {{ analytics.error }}
+        </div>
+    {% elif analytics.success %}
+        <!-- Overall Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Participants</h6>
+                                <h3 class="mb-0">{{ analytics.overall_stats.total_participants }}</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-users fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                        <small class="opacity-75">{{ analytics.overall_stats.date_range }}</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Total Attempts</h6>
+                                <h3 class="mb-0">{{ analytics.overall_stats.total_attempts }}</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-pencil-alt fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                        <small class="opacity-75">Completed attempts</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Active Quizzes</h6>
+                                <h3 class="mb-0">{{ analytics.overall_stats.total_quizzes }}</h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-question-circle fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                        <small class="opacity-75">Past 7 days</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-dark h-100">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h6 class="card-title">Avg Participation</h6>
+                                <h3 class="mb-0">
+                                    {% if analytics.overall_stats.total_quizzes > 0 %}
+                                        {{ "%.1f"|format(analytics.overall_stats.total_attempts / analytics.overall_stats.total_quizzes) }}
+                                    {% else %}
+                                        0
+                                    {% endif %}
+                                </h3>
+                            </div>
+                            <div>
+                                <i class="fas fa-chart-line fa-2x opacity-75"></i>
+                            </div>
+                        </div>
+                        <small class="opacity-75">Per quiz</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Daily Statistics Table -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-week me-2"></i>
+                    Daily Quiz Statistics (Last 7 Days)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Date</th>
+                                <th>Quiz Status</th>
+                                <th>Questions</th>
+                                <th>Participants</th>
+                                <th>Avg Score</th>
+                                <th>Avg %</th>
+                                <th>Best Score</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for day in analytics.daily_stats %}
+                            <tr>
+                                <td>
+                                    <strong>{{ day.date }}</strong>
+                                    <br>
+                                    <small class="text-muted">
+                                        {{ day.day_name if day.day_name else 'Unknown' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    {% if day.total_questions > 0 %}
+                                        <span class="badge bg-success">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Quiz</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.total_questions > 0 %}
+                                        <i class="fas fa-question-circle text-primary me-1"></i>{{ day.total_questions }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.participants_count > 0 %}
+                                        <i class="fas fa-users text-info me-1"></i>{{ day.participants_count }}
+                                    {% else %}
+                                        <span class="text-muted">0</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.participants_count > 0 %}
+                                        <strong>{{ day.average_score }}</strong>
+                                        <small class="text-muted">/ {{ day.total_questions }}</small>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.participants_count > 0 %}
+                                        {% set percentage = day.average_percentage %}
+                                        <span class="{% if percentage >= 80 %}text-success{% elif percentage >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                            <strong>{{ "%.1f"|format(percentage) }}%</strong>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.participants_count > 0 %}
+                                        <i class="fas fa-trophy text-warning me-1"></i>{{ day.highest_score }}
+                                    {% else %}
+                                        <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if day.total_questions > 0 %}
+                                        <a href="{{ url_for('main.admin_quiz_analytics', quiz_date=day.date) }}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-chart-bar"></i> Details
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">N/A</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Performers Section -->
+        <div class="row">
+            {% for day in analytics.daily_stats %}
+                {% if day.participants_count > 0 and day.top_3_performers %}
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-medal text-warning me-2"></i>
+                                Top Performers - {{ day.date }}
+                            </h6>
+                            <span class="badge bg-primary">{{ day.participants_count }} participants</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                {% for performer in day.top_3_performers %}
+                                <div class="col-12 mb-3">
+                                    <div class="d-flex align-items-center p-2 rounded {% if loop.index == 1 %}bg-warning bg-opacity-10{% elif loop.index == 2 %}bg-secondary bg-opacity-10{% else %}bg-success bg-opacity-10{% endif %}">
+                                        <div class="me-3">
+                                            {% if loop.index == 1 %}
+                                                <i class="fas fa-crown fa-lg text-warning"></i>
+                                            {% elif loop.index == 2 %}
+                                                <i class="fas fa-medal fa-lg text-secondary"></i>
+                                            {% else %}
+                                                <i class="fas fa-award fa-lg text-success"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-bold">{{ performer.name }}</div>
+                                            <small class="text-muted">{{ performer.email }}</small>
+                                        </div>
+                                        <div class="text-end">
+                                            <div class="fw-bold">{{ performer.score }}/{{ performer.total_questions }}</div>
+                                            <small class="{% if performer.percentage >= 80 %}text-success{% elif performer.percentage >= 60 %}text-warning{% else %}text-danger{% endif %}">
+                                                {{ "%.1f"|format(performer.percentage) }}%
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-bolt me-2"></i>
+                    Quick Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <a href="{{ url_for('main.admin_upload_quiz') }}" class="btn btn-success w-100 mb-2">
+                            <i class="fas fa-plus-circle me-2"></i>
+                            Upload New Quiz
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ url_for('main.admin_quizzes') }}" class="btn btn-info w-100 mb-2">
+                            <i class="fas fa-list-ul me-2"></i>
+                            Manage All Quizzes
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <button onclick="window.print()" class="btn btn-outline-secondary w-100 mb-2">
+                            <i class="fas fa-print me-2"></i>
+                            Print Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            No analytics data available. Please ensure quizzes and attempts exist in the database.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+.opacity-75 {
+    opacity: 0.75;
+}
+
+@media print {
+    .btn, nav, .card-header .btn {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+// Add any JavaScript for charts or interactivity here
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Analytics dashboard loaded');
+});
+</script>
+{% endblock %} 

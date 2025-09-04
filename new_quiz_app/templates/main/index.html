@@ -4,11 +4,27 @@
 
 {% block content %}
 <style>
+body {
+    margin: 0;
+    padding: 0;
+}
+
 .quiz-homepage {
-    background: linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 25%, #1e40af 50%, #1e3a8a 100%);
     min-height: 100vh;
-    padding: 20px;
+    padding: 40px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: -1;
+}
+
+.content-wrapper {
     position: relative;
+    z-index: 1;
+    padding-top: 40px;
 }
 
 .quiz-homepage::before {
@@ -19,260 +35,386 @@
     right: 0;
     bottom: 0;
     background: 
-        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
-        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
-        linear-gradient(135deg, #1e293b 0%, #334155 50%, #475569 100%);
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(16, 185, 129, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 40% 40%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
     z-index: -1;
+}
+
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
 }
 
 .page-header {
     text-align: center;
     color: white;
-    margin-bottom: 40px;
+    margin-bottom: 50px;
 }
 
 .page-title {
-    font-size: 3rem;
-    font-weight: bold;
-    margin-bottom: 10px;
+    font-size: 2.8rem;
+    font-weight: 300;
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
 }
 
 .page-subtitle {
-    font-size: 1.2rem;
-    opacity: 0.9;
+    font-size: 1.1rem;
+    opacity: 0.7;
+    font-weight: 300;
 }
 
-.quizzes-container {
-    max-width: 1200px;
-    margin: 0 auto;
+.quizzes-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    margin-bottom: 40px;
 }
 
 .quiz-card {
-    background: white;
-    border-radius: 15px;
-    margin-bottom: 25px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 0;
+    box-shadow: 
+        0 4px 24px rgba(0, 0, 0, 0.06),
+        0 1px 4px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     overflow: hidden;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.quiz-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .quiz-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+    transform: translateY(-4px);
+    box-shadow: 
+        0 12px 40px rgba(0, 0, 0, 0.1),
+        0 4px 16px rgba(0, 0, 0, 0.06);
+    border-color: rgba(59, 130, 246, 0.2);
 }
 
-.quiz-header {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
-    color: white;
-    padding: 20px 25px;
+.quiz-card:hover::before {
+    opacity: 1;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    padding: 24px 28px 20px;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.quiz-date-section {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
+    margin-bottom: 16px;
 }
 
 .quiz-date {
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 600;
+    color: #1e293b;
+    letter-spacing: -0.01em;
 }
 
-.quiz-meta {
+.today-badge {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+}
+
+.question-count {
     font-size: 0.9rem;
-    opacity: 0.9;
+    color: #64748b;
+    font-weight: 500;
 }
 
-.quiz-body {
-    padding: 25px;
+.card-body {
+    padding: 24px 28px 28px;
+    background: white;
+}
+
+.status-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 20px;
 }
 
-.quiz-info {
+.status-info {
     flex: 1;
-}
-
-.quiz-questions {
-    font-size: 1.1rem;
-    color: #374151;
-    margin-bottom: 10px;
-}
-
-.quiz-status {
-    font-size: 0.95rem;
-    color: #6b7280;
-}
-
-.quiz-actions {
-    flex-shrink: 0;
-    margin-left: 20px;
+    min-width: 0;
 }
 
 .status-badge {
-    display: inline-block;
-    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 0.8rem;
-    font-weight: bold;
-    margin-bottom: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
 }
 
 .badge-not-attempted {
-    background: #dbeafe;
-    color: #1d4ed8;
+    background: rgba(34, 197, 94, 0.1);
+    color: #059669;
 }
 
 .badge-in-progress {
-    background: #fef3c7;
+    background: rgba(245, 158, 11, 0.1);
     color: #d97706;
 }
 
 .badge-completed {
-    background: #dcfce7;
-    color: #059669;
+    background: rgba(59, 130, 246, 0.1);
+    color: #1d4ed8;
 }
 
-.quiz-btn {
+.status-message {
+    font-size: 0.9rem;
+    color: #64748b;
+    font-weight: 400;
+    line-height: 1.4;
+}
+
+.quiz-action {
+    flex-shrink: 0;
+}
+
+.action-btn {
     padding: 12px 24px;
-    border-radius: 25px;
+    border-radius: 12px;
     font-weight: 600;
+    font-size: 0.9rem;
     text-decoration: none;
     border: none;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     display: inline-flex;
     align-items: center;
     gap: 8px;
+    letter-spacing: -0.01em;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.quiz-btn:hover {
+.btn-success {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.btn-success:hover {
+    background: linear-gradient(135deg, #16a34a, #15803d);
     transform: translateY(-1px);
-    text-decoration: none;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+    color: white;
 }
 
-.no-quizzes {
-    background: white;
-    border-radius: 15px;
-    padding: 60px;
+.btn-warning {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+}
+
+.btn-warning:hover {
+    background: linear-gradient(135deg, #d97706, #b45309);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    color: white;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #1d4ed8, #1e40af);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+    color: white;
+}
+
+.empty-state {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    padding: 60px 40px;
     text-align: center;
-    color: #6b7280;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
 }
 
-.no-quizzes h3 {
-    color: #374151;
-    margin-bottom: 15px;
+.empty-state h3 {
+    color: #1e293b;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin-bottom: 8px;
 }
 
 /* Mobile responsive */
 @media (max-width: 768px) {
-    .quiz-homepage {
-        padding: 10px;
+    .content-wrapper {
+        padding: 20px 16px 40px;
     }
     
     .page-title {
         font-size: 2.2rem;
     }
     
-    .quiz-body {
-        flex-direction: column;
-        text-align: center;
+    .quizzes-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
     }
     
-    .quiz-actions {
-        margin-left: 0;
-        margin-top: 20px;
+    .status-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
     }
     
-    .quiz-header {
+    .quiz-action {
+        align-self: center;
+    }
+    
+    .card-header {
+        padding: 20px 24px 16px;
+    }
+    
+    .card-body {
+        padding: 20px 24px 24px;
+    }
+}
+
+@media (max-width: 480px) {
+    .quizzes-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .quiz-date-section {
         flex-direction: column;
-        text-align: center;
+        gap: 8px;
+        align-items: flex-start;
     }
 }
 </style>
 
-<div class="quiz-homepage">
-    <div class="page-header">
-        <div class="page-title">
-            🧠 AI Quiz Platform
-        </div>
-        <div class="page-subtitle">
-            Welcome back! Here are your recent quizzes from the past 7 days.
-        </div>
-    </div>
+<div class="quiz-homepage"></div>
 
-    <div class="quizzes-container">
-        {% if quiz_data %}
-            {% for item in quiz_data %}
-            <div class="quiz-card">
-                <div class="quiz-header">
-                    <div>
-                        <div class="quiz-date">
-                            Quiz - {{ item.quiz_date }}
+<div class="content-wrapper">
+    <div class="page-container">
+        <div class="page-header">
+            <div class="page-title">
+                🧠 AI Quiz Platform
+            </div>
+            <div class="page-subtitle">
+                Master artificial intelligence concepts through interactive assessments
+            </div>
+        </div>
+
+        <div class="quizzes-grid">
+            {% if quiz_data %}
+                {% for item in quiz_data %}
+                <div class="quiz-card">
+                    <div class="card-header">
+                        <div class="quiz-date-section">
+                            <div>
+                                <div class="quiz-date">
+                                    {{ item.quiz_date }}
+                                </div>
+                                <div class="question-count">
+                                    {{ item.total_questions }} Questions Available
+                                </div>
+                            </div>
                             {% if item.quiz_date == today %}
-                                <span class="badge bg-light text-primary ms-2">Today</span>
+                                <span class="today-badge">Today</span>
                             {% endif %}
                         </div>
                     </div>
-                    <div class="quiz-meta">
-                        {{ item.total_questions }} Questions
-                    </div>
-                </div>
-                
-                <div class="quiz-body">
-                    <div class="quiz-info">
-                        <div class="quiz-questions">
-                            <i class="fas fa-brain me-2"></i>
-                            {{ item.total_questions }} AI Knowledge Questions
-                        </div>
-                        
-                        <div>
-                            <span class="status-badge badge-{{ item.status.status|replace('_', '-') }}">
-                                {% if item.status.status == 'not_attempted' %}
-                                    <i class="fas fa-play me-1"></i>Not Started
-                                {% elif item.status.status == 'in_progress' %}
-                                    <i class="fas fa-pause me-1"></i>In Progress
-                                {% elif item.status.status == 'completed' %}
-                                    <i class="fas fa-check me-1"></i>Completed
-                                {% endif %}
-                            </span>
-                        </div>
-                        
-                        <div class="quiz-status">
-                            {{ item.status.message }}
-                        </div>
-                    </div>
                     
-                    <div class="quiz-actions">
-                        {% if item.status.action == 'attempt' %}
-                            <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
-                               class="quiz-btn {{ item.status.button_class }}">
-                                {{ item.status.button_text }}
-                            </a>
-                        {% elif item.status.action == 'resume' %}
-                            <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
-                               class="quiz-btn {{ item.status.button_class }}">
-                                {{ item.status.button_text }}
-                            </a>
-                        {% elif item.status.action == 'view_results' %}
-                            <a href="{{ url_for('quiz.view_result', quiz_date=item.quiz_date) }}" 
-                               class="quiz-btn {{ item.status.button_class }}">
-                                {{ item.status.button_text }}
-                            </a>
-                        {% endif %}
+                    <div class="card-body">
+                        <div class="status-row">
+                            <div class="status-info">
+                                <div>
+                                    <span class="status-badge badge-{{ item.status.status|replace('_', '-') }}">
+                                        {% if item.status.status == 'not_attempted' %}
+                                            <i class="fas fa-circle"></i>
+                                            Available
+                                        {% elif item.status.status == 'in_progress' %}
+                                            <i class="fas fa-clock"></i>
+                                            In Progress
+                                        {% elif item.status.status == 'completed' %}
+                                            <i class="fas fa-check-circle"></i>
+                                            Completed
+                                        {% endif %}
+                                    </span>
+                                </div>
+                                
+                                <div class="status-message">
+                                    {{ item.status.message }}
+                                </div>
+                            </div>
+                            
+                            <div class="quiz-action">
+                                {% if item.status.action == 'attempt' %}
+                                    <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
+                                       class="action-btn {{ item.status.button_class }}">
+                                        <i class="fas fa-play"></i>
+                                        Start Quiz
+                                    </a>
+                                {% elif item.status.action == 'resume' %}
+                                    <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
+                                       class="action-btn {{ item.status.button_class }}">
+                                        <i class="fas fa-arrow-right"></i>
+                                        Continue
+                                    </a>
+                                {% elif item.status.action == 'view_results' %}
+                                    <a href="{{ url_for('quiz.view_result', quiz_date=item.quiz_date) }}" 
+                                       class="action-btn {{ item.status.button_class }}">
+                                        <i class="fas fa-chart-line"></i>
+                                        View Results
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {% endfor %}
-        {% else %}
-            <div class="no-quizzes">
-                <h3>
-                    <i class="fas fa-calendar-times me-2"></i>
-                    No Quizzes Available
-                </h3>
-                <p class="lead">No quizzes have been created for the past 7 days.</p>
-                <p>Please check back later or contact an administrator to add new quizzes.</p>
-            </div>
-        {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <h3>
+                        <i class="fas fa-calendar-alt me-2 text-primary"></i>
+                        No Recent Quizzes
+                    </h3>
+                    <p>No quizzes have been created for the past 7 days.</p>
+                    <p>New assessments will appear here when available.</p>
+                </div>
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %} 

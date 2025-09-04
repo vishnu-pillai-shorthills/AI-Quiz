@@ -133,7 +133,9 @@ class AuthService:
             user_id = user_data.get("oid", user_data.get("sub"))
             user_doc = db.users_collection.find_one({"user_id": user_id})
             if user_doc:
-                return User.from_dict(user_doc)
+                user_obj = User.from_dict(user_doc)
+                # Return dictionary representation for template compatibility
+                return user_obj.to_dict()
         except Exception as e:
             print(f"Error getting user info: {e}")
         
