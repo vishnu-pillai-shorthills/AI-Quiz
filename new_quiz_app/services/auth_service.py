@@ -178,8 +178,10 @@ class AuthService:
         user_info = self.get_current_user_info()
         if user_info and hasattr(db, 'is_connected') and db.is_connected():
             try:
+                # user_info is now a dictionary, so use dict access
+                user_id = user_info.get('id') if isinstance(user_info, dict) else user_info.user_id
                 db.users_collection.update_one(
-                    {"user_id": user_info.user_id},
+                    {"user_id": user_id},
                     {"$set": {"last_active": datetime.utcnow()}}
                 )
             except Exception as e:

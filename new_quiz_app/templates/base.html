@@ -22,8 +22,8 @@
         </div>
     </nav>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
             <div class="container mt-4">
                 {% for category, message in messages %}
                     <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
@@ -32,8 +32,8 @@
                     </div>
                 {% endfor %}
             </div>
-        {% endif %}
-    {% endwith %}
+            {% endif %}
+        {% endwith %}
 
     <main class="{% if request.endpoint == 'main.index' %}{% else %}container mt-4{% endif %}">
         {% block content %}{% endblock %}

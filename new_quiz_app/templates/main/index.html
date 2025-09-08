@@ -340,7 +340,7 @@ body {
             {% if quiz_data %}
                 {% for item in quiz_data %}
                 <div class="quiz-card">
-                    <div class="card-header">
+                <div class="card-header">
                         <div class="quiz-date-section">
                             <div>
                                 <div class="quiz-date">
@@ -354,9 +354,9 @@ body {
                                 <span class="today-badge">Today</span>
                             {% endif %}
                         </div>
-                    </div>
+                </div>
                     
-                    <div class="card-body">
+                <div class="card-body">
                         <div class="status-row">
                             <div class="status-info">
                                 <div>
@@ -385,7 +385,7 @@ body {
                                        class="action-btn {{ item.status.button_class }}">
                                         <i class="fas fa-play"></i>
                                         Start Quiz
-                                    </a>
+                        </a>
                                 {% elif item.status.action == 'resume' %}
                                     <a href="{{ url_for('quiz.take_quiz', quiz_date=item.quiz_date) }}" 
                                        class="action-btn {{ item.status.button_class }}">
@@ -404,7 +404,7 @@ body {
                     </div>
                 </div>
                 {% endfor %}
-            {% else %}
+        {% else %}
                 <div class="empty-state">
                     <h3>
                         <i class="fas fa-calendar-alt me-2 text-primary"></i>
@@ -414,7 +414,7 @@ body {
                     <p>New assessments will appear here when available.</p>
                 </div>
             {% endif %}
-        </div>
+            </div>
     </div>
 </div>
 {% endblock %} 

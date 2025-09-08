@@ -4,29 +4,29 @@
 
 {% block content %}
 <div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
             <div class="card border-0 shadow-sm">
                 <div class="card-body text-center p-5">
                     <div class="mb-4">
                         <i class="fas fa-brain fa-3x text-primary mb-3"></i>
                         <h2 class="h4 mb-2">Welcome to Quiz App</h2>
                         <p class="text-muted">Sign in with your Microsoft account to continue</p>
-                    </div>
-                    
-                    {% if auth_url %}
+            </div>
+                
+                {% if auth_url %}
                     <div class="d-grid">
-                        <a href="{{ auth_url }}" class="btn btn-primary btn-lg">
+                    <a href="{{ auth_url }}" class="btn btn-primary btn-lg">
                             <i class="fab fa-microsoft me-2"></i>
-                            Sign in with Microsoft
-                        </a>
+                        Sign in with Microsoft
+                    </a>
                     </div>
-                    {% else %}
+                {% else %}
                     <div class="alert alert-warning">
                         <i class="fas fa-exclamation-triangle me-2"></i>
                         Authentication is not configured. Please contact your administrator.
                     </div>
-                    {% endif %}
+                {% endif %}
                     
                     <div class="mt-4">
                         <small class="text-muted">

@@ -79,7 +79,8 @@ def logout():
         # Clear local session
         auth_service.logout()
         
-        flash("You have been logged out successfully", "info")
+        # Don't show flash message for logout as user will be redirected away
+        # The Microsoft logout page will handle the logout confirmation
         
         # Redirect to Microsoft logout
         return redirect(logout_url)
