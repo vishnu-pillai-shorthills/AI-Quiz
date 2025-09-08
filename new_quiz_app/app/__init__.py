@@ -24,6 +24,16 @@ def create_app(config_name='default'):
     # Configure Flask-Session
     Session(app)
     
+    # Handle HTTPS in production (behind reverse proxy)
+    @app.before_request
+    def force_https():
+        from flask import request, redirect, url_for
+        # Only force HTTPS for production (non-localhost domains)
+        if (request.headers.get('X-Forwarded-Proto') == 'http' and 
+            not request.host.startswith('localhost') and 
+            not request.host.startswith('127.0.0.1')):
+            return redirect(request.url.replace('http://', 'https://'))
+    
     # Initialize authentication service
     auth_service = AuthService()
     

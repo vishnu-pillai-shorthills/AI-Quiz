@@ -26,6 +26,9 @@ class Config:
     QUIZ_ATTEMPTS_PER_DAY = 1  # Users can attempt quiz only once per day
     AUTO_SAVE_INTERVAL = 30  # Auto-save answers every 30 seconds
     
+    # HTTPS Configuration for production
+    PREFERRED_URL_SCHEME = os.getenv('PREFERRED_URL_SCHEME', 'https' if not DEBUG else 'http')
+    
     # File Upload Configuration
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     UPLOAD_FOLDER = 'uploads'

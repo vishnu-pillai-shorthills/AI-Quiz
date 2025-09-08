@@ -637,7 +637,7 @@
                             <div class="option-choice" onclick="selectOption(this)">
                                 <input type="radio" name="answers[{{ q_index0 }}]" 
                                        value="{{ key }}" class="d-none"
-                                       onchange="updateProgress(); autoSaveAnswer(this);"
+                                       onchange="updateProgress();"
                                        {% if user_answers.get(q_index0) == key %}checked{% endif %}>
                                 <span class="option-letter">{{ key }}</span>
                                 <span class="option-text">{{ value }}</span>
@@ -657,6 +657,8 @@
                         <div class="progress-number" id="progressNumber">0</div>
                     </div>
                     <div class="progress-label">of {{ quiz.questions|length }} completed</div>
+                    
+
                 </div>
 
                 <!-- Stats -->
@@ -763,6 +765,75 @@
     </div>
 </div>
 
+<!-- Leave Quiz Modal -->
+<div class="modal fade" id="leaveQuizModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content modern-modal">
+            <div class="modal-header-modern">
+                <div class="modal-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3 class="modal-title-modern">Leave Quiz?</h3>
+                <p class="modal-subtitle">Your progress will be saved but quiz will remain incomplete</p>
+                <button type="button" class="btn-close-modern" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="modal-body-modern">
+                <div class="progress-summary">
+                    <div class="progress-item answered">
+                        <div class="progress-circle">
+                            <div class="progress-number" id="leaveModalAnswered">0</div>
+                        </div>
+                        <div class="progress-label">
+                            <span class="progress-text">Answered</span>
+                            <span class="progress-desc">Questions completed</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-divider">
+                        <div class="divider-line"></div>
+                        <span class="divider-text">of</span>
+                        <div class="divider-line"></div>
+                    </div>
+                    
+                    <div class="progress-item total">
+                        <div class="progress-circle">
+                            <div class="progress-number">{{ quiz.questions|length }}</div>
+                        </div>
+                        <div class="progress-label">
+                            <span class="progress-text">Total</span>
+                            <span class="progress-desc">Questions available</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="warning-notice" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 1px solid #f59e0b;">
+                    <div class="warning-icon" style="background: #f59e0b;">
+                        <i class="fas fa-save"></i>
+                    </div>
+                    <div class="warning-content">
+                        <strong>Progress Saved</strong>
+                        <p>You can continue this quiz later from where you left off</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-footer-modern">
+                <button type="button" class="btn-modern btn-secondary-modern" data-bs-dismiss="modal">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Continue Quiz
+                </button>
+                <button type="button" class="btn-modern btn-primary-modern" onclick="confirmLeaveQuiz()" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
+                    <i class="fas fa-home me-2"></i>
+                    Go to Home
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Global variables
 let totalQuestions = {{ quiz.questions|length }};
@@ -859,6 +930,8 @@ window.saveProgress = function() {
         answers[questionNumber - 1] = radio.value;
     });
     
+    // Auto-save progress silently (no visual indicator)
+    
     return fetch('{{ url_for("quiz.save_progress", quiz_date=quiz_date) }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -866,12 +939,10 @@ window.saveProgress = function() {
     }).then(response => response.json());
 };
 
-window.autoSaveAnswer = function() {
-    saveProgress();
-};
+// Auto-save function removed - now using 10-second interval instead
 
 window.startAutoSave = function() {
-    autoSaveInterval = setInterval(() => saveProgress(), 30000);
+    autoSaveInterval = setInterval(() => saveProgress(), 10000); // Save every 10 seconds
 };
 
 // Initialize when page loads
@@ -890,6 +961,53 @@ document.addEventListener('DOMContentLoaded', function() {
     {% endfor %}
     updateProgress();
     {% endif %}
+});
+
+// Leave quiz functions
+window.showLeaveQuizModal = function() {
+    // Update the modal with current progress
+    const leaveModalAnswered = document.getElementById('leaveModalAnswered');
+    if (leaveModalAnswered) {
+        leaveModalAnswered.textContent = answeredQuestions.size;
+    }
+    
+    // Show the modal
+    const modal = new bootstrap.Modal(document.getElementById('leaveQuizModal'));
+    modal.show();
+};
+
+window.confirmLeaveQuiz = function() {
+    // Save progress before leaving
+    saveProgress().then(() => {
+        // Navigate to home page
+        window.location.href = '{{ url_for("main.index") }}';
+    }).catch(() => {
+        // Even if save fails, allow navigation
+        window.location.href = '{{ url_for("main.index") }}';
+    });
+};
+
+// Intercept home navigation from navbar
+document.addEventListener('DOMContentLoaded', function() {
+    // Find the home/logo link in navbar and intercept it
+    const homeLinks = document.querySelectorAll('a[href="{{ url_for("main.index") }}"]');
+    homeLinks.forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            showLeaveQuizModal();
+        });
+    });
+    
+    // Also intercept browser back button
+    window.addEventListener('popstate', function(e) {
+        e.preventDefault();
+        showLeaveQuizModal();
+        // Push the current state back to prevent navigation
+        history.pushState(null, null, window.location.href);
+    });
+    
+    // Prevent initial back button
+    history.pushState(null, null, window.location.href);
 });
 
 // Cleanup

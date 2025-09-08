@@ -185,8 +185,8 @@ def submit_quiz(quiz_date):
         else:
             # Fallback to basic result
             return render_template("quiz/result.html", 
-                                 quiz_date=quiz_date,
-                                 score_result=score_result)
+                             quiz_date=quiz_date,
+                             score_result=score_result)
     else:
         flash(message, "error")
         return redirect(url_for('quiz.take_quiz', quiz_date=quiz_date))
