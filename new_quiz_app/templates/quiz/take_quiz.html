@@ -839,13 +839,6 @@ window.showSubmitModal = function() {
 };
 
 window.submitQuiz = function() {
-    if (answeredQuestions.size < totalQuestions) {
-        const unanswered = totalQuestions - answeredQuestions.size;
-        if (!confirm(`You have ${unanswered} unanswered questions. Submit anyway?`)) {
-            return;
-        }
-    }
-
     // Hide modal
     const modal = bootstrap.Modal.getInstance(document.getElementById('submitModal'));
     if (modal) modal.hide();
