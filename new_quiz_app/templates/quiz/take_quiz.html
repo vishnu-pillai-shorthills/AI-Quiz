@@ -186,12 +186,13 @@
     width: 120px;
     height: 120px;
     border-radius: 50%;
-    background: conic-gradient(#10b981 0deg, #e5e7eb 0deg);
+    background: conic-gradient(#3b82f6 0deg, #e2e8f0 0deg);
     display: flex;
     align-items: center;
     justify-content: center;
     margin: 0 auto 20px;
     position: relative;
+    transition: background 0.3s ease;
 }
 
 .progress-circle::before {
@@ -201,14 +202,20 @@
     background: white;
     border-radius: 50%;
     position: absolute;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .progress-number {
     position: relative;
     z-index: 1;
-    font-size: 1.8rem;
-    font-weight: bold;
+    font-size: 2rem;
+    font-weight: 800;
     color: #1f2937;
+    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    transition: all 0.3s ease;
 }
 
 .progress-label {
@@ -637,7 +644,7 @@
                             <div class="option-choice" onclick="selectOption(this)">
                                 <input type="radio" name="answers[{{ q_index0 }}]" 
                                        value="{{ key }}" class="d-none"
-                                       onchange="updateProgress();"
+                                       onchange="updateQuizProgress();"
                                        {% if user_answers.get(q_index0) == key %}checked{% endif %}>
                                 <span class="option-letter">{{ key }}</span>
                                 <span class="option-text">{{ value }}</span>
@@ -899,27 +906,45 @@ window.selectOption = function(optionElement) {
     radio.dispatchEvent(new Event('change'));
 };
 
-window.updateProgress = function() {
+window.updateQuizProgress = function() {
+    console.log('🔍 Updating quiz progress...');
+    
     // Count answered questions
     answeredQuestions.clear();
     document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
         const questionBlock = radio.closest('.question-block');
         const questionNumber = parseInt(questionBlock.dataset.question);
         answeredQuestions.add(questionNumber);
+        console.log(`🔍 Found answered question: ${questionNumber}`);
     });
     
-    // Update progress bar
+    console.log(`🔍 Total answered: ${answeredQuestions.size} out of ${totalQuestions}`);
+    
+    // Calculate percentage
     const progressPercentage = (answeredQuestions.size / totalQuestions) * 100;
-    document.getElementById('progressBar').style.width = progressPercentage + '%';
     
     // Update progress circle
     const progressCircle = document.getElementById('progressCircle');
-    progressCircle.style.background = `conic-gradient(#3b82f6 ${progressPercentage * 3.6}deg, #e2e8f0 ${progressPercentage * 3.6}deg)`;
+    if (progressCircle) {
+        if (progressPercentage === 100) {
+            // Special styling for 100% completion
+            progressCircle.style.background = `conic-gradient(#22c55e 360deg, #22c55e 360deg)`;
+            progressCircle.style.boxShadow = '0 0 20px rgba(34, 197, 94, 0.4)';
+        } else {
+            // Normal progress styling
+            progressCircle.style.background = `conic-gradient(#3b82f6 ${progressPercentage * 3.6}deg, #e2e8f0 ${progressPercentage * 3.6}deg)`;
+            progressCircle.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.2)';
+        }
+    }
     
     // Update numbers
-    document.getElementById('progressNumber').textContent = answeredQuestions.size;
-    document.getElementById('answeredCount').textContent = answeredQuestions.size;
-    document.getElementById('remainingCount').textContent = totalQuestions - answeredQuestions.size;
+    const progressNumber = document.getElementById('progressNumber');
+    const answeredCount = document.getElementById('answeredCount');
+    const remainingCount = document.getElementById('remainingCount');
+    
+    if (progressNumber) progressNumber.textContent = answeredQuestions.size;
+    if (answeredCount) answeredCount.textContent = answeredQuestions.size;
+    if (remainingCount) remainingCount.textContent = totalQuestions - answeredQuestions.size;
     
     // Update navigation buttons
     document.querySelectorAll('.nav-button').forEach((btn, index) => {
@@ -930,6 +955,8 @@ window.updateProgress = function() {
             btn.classList.remove('answered');
         }
     });
+    
+    console.log('✅ Progress updated successfully');
 };
 
 window.scrollToQuestion = function(questionNumber) {
@@ -1104,7 +1131,8 @@ window.updateProgress = function(percentage, text) {
 
 // Initialize when page loads
 document.addEventListener('DOMContentLoaded', function() {
-    updateProgress();
+    console.log('🔍 Initializing quiz page...');
+    updateQuizProgress();
     startAutoSave();
     
     // Restore saved answers
@@ -1114,10 +1142,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (input{{ question_index }}) {
         input{{ question_index }}.checked = true;
         input{{ question_index }}.closest('.option-choice').classList.add('selected');
+        console.log('🔍 Restored answer for Q{{ question_index }}: {{ selected_answer }}');
     }
     {% endfor %}
-    updateProgress();
+    updateQuizProgress();
     {% endif %}
+    
+    console.log('✅ Quiz page initialized');
 });
 
 // Leave quiz functions
