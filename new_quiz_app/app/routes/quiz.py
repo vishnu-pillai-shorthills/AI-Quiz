@@ -108,6 +108,11 @@ def save_progress(quiz_date):
         data = request.get_json() or {}
         answers = data.get('answers', {})  # {question_index: "A"}
 
+        # DEBUG: Log what answers are being submitted
+        print(f"🔍 SAVE_PROGRESS DEBUG: User {user_id}")
+        print(f"   Quiz Date: {quiz_date}")
+        print(f"   Received answers: {answers}")
+        print(f"   Answer count: {len(answers)}")
         
         if not isinstance(answers, dict):
             return jsonify({"success": False, "message": "Invalid answers payload"}), 400
@@ -122,6 +127,7 @@ def save_progress(quiz_date):
 
         # Save each provided answer
         saved_count = 0
+        failed_saves = []
         for k, v in answers.items():
             try:
                 q_index = int(k)
@@ -134,6 +140,16 @@ def save_progress(quiz_date):
             success, msg = quiz_service.save_answer(user_id, quiz_date, q_index, v)
             if success:
                 saved_count += 1
+                print(f"   ✅ Saved Q{q_index}: {v}")
+            else:
+                failed_saves.append((q_index, v, msg))
+                print(f"   ❌ Failed Q{q_index}: {v} - {msg}")
+
+        # Log final result
+        print(f"   📊 Final: {saved_count} saved, {len(failed_saves)} failed")
+        
+        if failed_saves:
+            print(f"   ⚠️ Failed saves: {failed_saves}")
 
         return jsonify({"success": True, "message": f"Progress saved ({saved_count} answers)"})
     except Exception as e:
@@ -151,6 +167,33 @@ def submit_quiz(quiz_date):
         flash("Error: Could not identify user", "error")
         return redirect(url_for('main.index'))
     
+    # FORCE SAVE ALL CURRENT ANSWERS FROM FORM DATA
+    form_data = request.form
+    print(f"🔍 SUBMIT FORM DATA: {dict(form_data)}")
+    
+    # Extract all answers from form submission
+    submitted_answers = {}
+    for key, value in form_data.items():
+        # Radio buttons are named "answers[0]", "answers[1]", etc.
+        if key.startswith('answers[') and key.endswith(']'):
+            try:
+                # Extract the index from "answers[0]" -> 0
+                question_index = int(key[8:-1])  # Remove "answers[" and "]"
+                submitted_answers[question_index] = value
+                print(f"🔍 Form answer index {question_index}: {value}")
+            except ValueError:
+                continue
+    
+    print(f"🔍 Total form answers: {len(submitted_answers)}")
+    
+    # Save each answer from form data (overwrite any previous saves)
+    for q_index, answer in submitted_answers.items():
+        success, msg = quiz_service.save_answer(user_id, quiz_date, q_index, answer)
+        if success:
+            print(f"✅ Force saved Q{q_index}: {answer}")
+        else:
+            print(f"❌ Failed to save Q{q_index}: {answer} - {msg}")
+    
     # Submit quiz
     success, message, score_result = quiz_service.submit_quiz(user_id, quiz_date)
     
@@ -162,11 +205,21 @@ def submit_quiz(quiz_date):
         if attempt and quiz:
             # Prepare full result data including answers summary
             answers_summary = attempt.get_answers_summary()
+            print(f"🔍 RESULT DEBUG: Answers summary: {answers_summary}")
             
             # Create a lookup dict for faster answer matching
             answer_lookup = {}
             for ans in answers_summary:
                 answer_lookup[ans['question_index']] = ans
+                print(f"🔍 Added to lookup: Q{ans['question_index']} = {ans['selected_answer']}")
+            
+            print(f"🔍 Final answer_lookup keys: {list(answer_lookup.keys())}")
+            print(f"🔍 Quiz has {len(quiz.questions)} questions")
+            
+            # Check for missing answers
+            for i in range(len(quiz.questions)):
+                if i not in answer_lookup:
+                    print(f"⚠️ Missing answer for question {i}")
             
             result_data = {
                 'score': attempt.score,
@@ -181,7 +234,10 @@ def submit_quiz(quiz_date):
             return render_template("quiz/result.html", 
                                  quiz_date=quiz_date,
                                  score_result=score_result,
-                                 result_data=result_data)
+                                 result_data=result_data,
+                                 score=attempt.score,
+                                 total=attempt.total_questions,
+                                 percentage=attempt.percentage)
         else:
             # Fallback to basic result
             return render_template("quiz/result.html", 
@@ -239,7 +295,10 @@ def view_result(quiz_date):
     
     return render_template("quiz/result.html", 
                          quiz_date=quiz_date,
-                         result_data=result_data)
+                         result_data=result_data,
+                         score=attempt.score,
+                         total=attempt.total_questions,
+                         percentage=attempt.percentage)
 
 @quiz_bp.route('/history')
 def quiz_history():

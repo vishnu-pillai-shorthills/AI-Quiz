@@ -834,6 +834,50 @@
     </div>
 </div>
 
+<!-- Quiz Submission Loading Overlay -->
+<div class="loading-overlay" id="submissionLoadingOverlay" style="display: none;">
+    <div class="loading-container">
+        <div class="loading-content">
+            <!-- Animated Icon -->
+            <div class="loading-icon">
+                <i class="fas fa-paper-plane loading-plane"></i>
+            </div>
+            
+            <!-- Loading Title -->
+            <h3 class="loading-title">Submitting Your Quiz</h3>
+            
+            <!-- Progress Bar -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Saving your answers...</div>
+            </div>
+            
+            <!-- Status Messages -->
+            <div class="status-messages">
+                <div class="status-message active" id="status1">
+                    <i class="fas fa-save me-2"></i>
+                    Saving your answers
+                </div>
+                <div class="status-message" id="status2">
+                    <i class="fas fa-calculator me-2"></i>
+                    Calculating your score
+                </div>
+                <div class="status-message" id="status3">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Generating results
+                </div>
+            </div>
+            
+            <!-- Fun encouragement -->
+            <div class="encouragement-text">
+                Please wait while we evaluate your performance...
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Global variables
 let totalQuestions = {{ quiz.questions|length }};
@@ -914,35 +958,148 @@ window.submitQuiz = function() {
     const modal = bootstrap.Modal.getInstance(document.getElementById('submitModal'));
     if (modal) modal.hide();
 
-    // Save and submit
-    saveProgress().then(() => {
-        document.getElementById('quizForm').submit();
-    }).catch(() => {
-        document.getElementById('quizForm').submit();
+    // Show loading overlay immediately
+    showSubmissionLoading();
+
+    // Enhanced save and submit with debugging
+    console.log('🔍 SUBMIT DEBUG: Starting submission process');
+    
+    // Collect all current answers
+    const answers = {};
+    const allRadios = document.querySelectorAll('input[type="radio"]:checked');
+    console.log(`🔍 Found ${allRadios.length} checked radio buttons`);
+    
+    allRadios.forEach((radio, index) => {
+        const questionBlock = radio.closest('.question-block');
+        const questionNumber = parseInt(questionBlock.dataset.question);
+        answers[questionNumber - 1] = radio.value;
+        console.log(`🔍 Q${questionNumber}: ${radio.value}`);
+    });
+    
+    console.log('🔍 Final answers object:', answers);
+    console.log(`🔍 Total answers collected: ${Object.keys(answers).length}`);
+    
+    // Save progress with enhanced error handling
+    saveProgress().then((response) => {
+        console.log('✅ Save progress successful:', response);
+        // Add small delay to show the loading states
+        setTimeout(() => {
+            document.getElementById('quizForm').submit();
+        }, 500);
+    }).catch((error) => {
+        console.error('❌ Save progress failed:', error);
+        // Submit anyway to avoid losing the submission
+        setTimeout(() => {
+            document.getElementById('quizForm').submit();
+        }, 500);
     });
 };
 
 window.saveProgress = function() {
     const answers = {};
-    document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
+    
+    // Enhanced answer collection with debugging
+    console.log('🔍 SAVE_PROGRESS: Starting answer collection...');
+    
+    const allRadios = document.querySelectorAll('input[type="radio"]:checked');
+    console.log(`🔍 Found ${allRadios.length} checked radio buttons`);
+    
+    allRadios.forEach((radio, index) => {
         const questionBlock = radio.closest('.question-block');
+        if (!questionBlock) {
+            console.warn(`⚠️ No question block found for radio ${index}`);
+            return;
+        }
+        
         const questionNumber = parseInt(questionBlock.dataset.question);
-        answers[questionNumber - 1] = radio.value;
+        if (isNaN(questionNumber)) {
+            console.warn(`⚠️ Invalid question number for radio ${index}:`, questionBlock.dataset.question);
+            return;
+        }
+        
+        const answerKey = questionNumber - 1; // Convert to 0-based index
+        answers[answerKey] = radio.value;
+        console.log(`🔍 Collected Q${questionNumber} (index ${answerKey}): ${radio.value}`);
     });
     
-    // Auto-save progress silently (no visual indicator)
+    console.log('🔍 Final answers object:', answers);
+    console.log(`🔍 Total answers to save: ${Object.keys(answers).length}`);
     
+    // Auto-save progress silently (no visual indicator)
     return fetch('{{ url_for("quiz.save_progress", quiz_date=quiz_date) }}', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ answers: answers })
-    }).then(response => response.json());
+    }).then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    }).then(data => {
+        console.log('🔍 Save response:', data);
+        return data;
+    }).catch(error => {
+        console.error('❌ Save progress error:', error);
+        throw error;
+    });
 };
 
 // Auto-save function removed - now using 10-second interval instead
 
 window.startAutoSave = function() {
     autoSaveInterval = setInterval(() => saveProgress(), 10000); // Save every 10 seconds
+};
+
+// Loading overlay functions
+window.showSubmissionLoading = function() {
+    const overlay = document.getElementById('submissionLoadingOverlay');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    // Show the overlay
+    overlay.style.display = 'flex';
+    
+    // Animate the status messages
+    setTimeout(() => {
+        activateStatus('status1');
+        updateProgress(30, 'Saving your answers...');
+    }, 200);
+    
+    setTimeout(() => {
+        activateStatus('status2');
+        updateProgress(70, 'Calculating your score...');
+    }, 1200);
+    
+    setTimeout(() => {
+        activateStatus('status3');
+        updateProgress(100, 'Generating results...');
+    }, 2200);
+};
+
+window.activateStatus = function(statusId) {
+    // Deactivate all status messages
+    document.querySelectorAll('.status-message').forEach(msg => {
+        msg.classList.remove('active');
+    });
+    
+    // Activate the current status
+    const currentStatus = document.getElementById(statusId);
+    if (currentStatus) {
+        currentStatus.classList.add('active');
+    }
+};
+
+window.updateProgress = function(percentage, text) {
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    
+    if (progressFill) {
+        progressFill.style.width = percentage + '%';
+    }
+    
+    if (progressText && text) {
+        progressText.textContent = text;
+    }
 };
 
 // Initialize when page loads
