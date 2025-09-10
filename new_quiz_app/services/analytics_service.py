@@ -44,18 +44,21 @@ class AnalyticsService:
             # Get only completed attempts for scoring calculations
             attempts = [a for a in all_attempts if a.get('is_completed', False)]
             
-            # Get user information for all participants
-            user_ids = list(set([attempt['user_id'] for attempt in attempts]))
+            # Get user information for all participants (both who opened and submitted)
+            all_user_ids = list(set([attempt['user_id'] for attempt in all_attempts]))
+            submitted_user_ids = list(set([attempt['user_id'] for attempt in attempts]))
             users = list(db.users_collection.find({
-                "user_id": {"$in": user_ids}
+                "user_id": {"$in": all_user_ids}
             }))
             user_lookup = {user['user_id']: user for user in users}
             
             # Process statistics for each day
             daily_stats = []
             overall_stats = {
-                "total_participants": len(user_ids),
-                "total_attempts": len(attempts),
+                "total_participants": len(all_user_ids),      # Total unique users who opened quizzes
+                "total_submitted": len(submitted_user_ids),   # Total unique users who submitted quizzes  
+                "total_attempts": len(attempts),              # Total completed quiz attempts
+                "total_opened": len(all_attempts),            # Total quiz opens (including incomplete)
                 "total_quizzes": len(quizzes),
                 "date_range": f"{start_date.strftime('%Y-%m-%d')} to {today.strftime('%Y-%m-%d')}"
             }
@@ -99,7 +102,9 @@ class AnalyticsService:
                         "day_name": day_name,
                         "quiz_title": f"Quiz for {quiz_date}",
                         "total_questions": quiz_info.get('total_questions', 0),
-                        "participants_count": len(day_attempts),
+                        "participants_count": len(day_attempts),  # People who submitted
+                        "total_opened": len(day_all_attempts),    # People who opened the quiz
+                        "submitted_count": len(day_attempts),     # Explicit count of submissions
                         "average_score": round(sum(scores) / len(scores), 2) if scores else 0,
                         "average_percentage": round(sum(percentages) / len(percentages), 2) if percentages else 0,
                         "highest_score": max(scores) if scores else 0,
@@ -115,7 +120,9 @@ class AnalyticsService:
                         "day_name": day_name,
                         "quiz_title": f"Quiz for {quiz_date}",
                         "total_questions": quiz_info.get('total_questions', 0),
-                        "participants_count": 0,
+                        "participants_count": 0,          # People who submitted
+                        "total_opened": len(day_all_attempts),  # People who opened (could be > 0 even if none submitted)
+                        "submitted_count": 0,             # Explicit count of submissions
                         "average_score": 0,
                         "average_percentage": 0,
                         "highest_score": 0,
@@ -130,7 +137,9 @@ class AnalyticsService:
                         "day_name": day_name,
                         "quiz_title": f"No quiz available",
                         "total_questions": 0,
-                        "participants_count": 0,
+                        "participants_count": 0,    # People who submitted
+                        "total_opened": 0,          # People who opened
+                        "submitted_count": 0,       # Explicit count of submissions
                         "average_score": 0,
                         "average_percentage": 0,
                         "highest_score": 0,
